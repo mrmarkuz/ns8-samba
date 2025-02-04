@@ -66,7 +66,7 @@ reponame="samba"
 # Reuse existing nodebuilder-samba container, to speed up builds
 if ! buildah containers --format "{{.ContainerName}}" | grep -q nodebuilder-samba; then
     echo "Pulling NodeJS runtime..."
-    buildah from --name nodebuilder-samba -v "${PWD}:/usr/src:Z" docker.io/library/node:22.12.0-slim
+    buildah from --name nodebuilder-samba -v "${PWD}:/usr/src:Z" docker.io/library/node:22.13.1-slim
 fi
 
 echo "Downloading user manager ${user_manager_version} UI..."
