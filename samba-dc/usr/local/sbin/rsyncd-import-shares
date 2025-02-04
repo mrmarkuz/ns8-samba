@@ -77,4 +77,4 @@ done
 
 # Grant ACL read privileges to domain controllers:
 shopt -s nullglob
-echo "${SAMBA_SHARES_DIR}"/* | xargs -r -- setfacl -m group:"domain controllers":rx
+printf '%s\0' "${SAMBA_SHARES_DIR}"/* | xargs -0 -r -- setfacl -m group:"domain controllers":rx
