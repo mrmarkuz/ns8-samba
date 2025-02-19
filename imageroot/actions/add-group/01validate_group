@@ -36,3 +36,11 @@ if proc.returncode == 0:
     agent.set_status('validation-failed')
     json.dump([{'field':'group', 'parameter':'group','value': group, 'error':'group_already_exists'}], fp=sys.stdout)
     sys.exit(2)
+
+# we test if the group does not have the same name than a user
+testnameavailable_cmd = ['podman', 'exec', '-i', 'samba-dc', 'samba-tool', 'user', 'show', group]
+testnameavailable_proc = subprocess.run(testnameavailable_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
+if testnameavailable_proc.returncode == 0:
+    agent.set_status('validation-failed')
+    json.dump([{'field':'group', 'parameter':'group','value': group, 'error':'user_with_same_name'}], fp=sys.stdout)
+    sys.exit(2)
