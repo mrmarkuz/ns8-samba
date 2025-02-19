@@ -44,7 +44,7 @@ subprocess.run(addgroup_cmd, stdout=sys.stderr, check=True, text=True)
 if users:
     addmembers_cmd = [
         'podman', 'exec', 'samba-dc', 'samba-tool',
-        'group', 'addmembers', group, ','.join(users),
+        'group', 'addmembers', group, ','.join(users), '--object-types=user'
     ]
 
     subprocess.run(addmembers_cmd, stdout=sys.stderr, check=True, text=True)

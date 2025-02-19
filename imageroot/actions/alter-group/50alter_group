@@ -39,8 +39,8 @@ if 'users' in request:
 
     add_members = new_members - old_members
     if add_members:
-        subprocess.run(sambatool_cmd + ['group', "addmembers", group, ','.join(add_members)], stdout=sys.stderr, check=True, text=True)
+        subprocess.run(sambatool_cmd + ['group', "addmembers", group, ','.join(add_members), '--object-types=user'], stdout=sys.stderr, check=True, text=True)
 
     rem_members = old_members - new_members
     if rem_members:
-        subprocess.run(sambatool_cmd + ['group', "removemembers", group, ','.join(rem_members)], stdout=sys.stderr, check=True, text=True)
+        subprocess.run(sambatool_cmd + ['group', "removemembers", group, ','.join(rem_members), '--object-types=user'], stdout=sys.stderr, check=True, text=True)
