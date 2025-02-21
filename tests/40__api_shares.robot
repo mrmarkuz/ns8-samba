@@ -27,13 +27,13 @@ Remove test accounts
 User can write to share
     [Arguments]    ${user}    ${share}
     # Run "put" command two times, to check the file is created with proper permissions and can be overwritten too
-    ${stdout}  ${stderr}  ${rc} =  Execute Command    ssh -o "StrictHostKeyChecking=no" ${MID1}@localhost "podman exec samba-dc smbclient -c 'put README.md ; put README.md' -U ${user} //127.0.0.1/${share} ${PASSWORD}"
+    ${stdout}  ${stderr}  ${rc} =  Execute Command    runagent -m ${MID1} bash -c "podman exec samba-dc smbclient -c 'put README.md ; put README.md' -U ${user} //127.0.0.1/${share} ${PASSWORD}"
     ...                            return_rc=${TRUE}    return_stdout=${TRUE}    return_stderr=${TRUE}
     Should Be Equal As Integers    ${rc}    ${0}    msg=smbclient_failed
 
 User can read from share
     [Arguments]    ${user}    ${share}
-    ${stdout}  ${stderr}  ${rc} =  Execute Command    ssh -o "StrictHostKeyChecking=no" ${MID1}@localhost "podman exec samba-dc smbclient -c 'get README.md' -U ${user} //127.0.0.1/${share} ${PASSWORD}"
+    ${stdout}  ${stderr}  ${rc} =  Execute Command    runagent -m ${MID1} bash-c "podman exec samba-dc smbclient -c 'get README.md' -U ${user} //127.0.0.1/${share} ${PASSWORD}"
     ...                            return_rc=${TRUE}    return_stdout=${TRUE}    return_stderr=${TRUE}
     Should Be Equal As Integers    ${rc}    ${0}    msg=smbclient_failed
 

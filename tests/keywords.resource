@@ -18,7 +18,7 @@ Create a module instance
     ${output}  ${rc} =    Execute Command    add-module ${IMAGE_URL} 1    return_rc=True
     Should Be Equal As Integers    ${rc}  0
     &{output} =    Evaluate    ${output}
-    [Return]  ${output.module_id}
+    RETURN  ${output.module_id}
 
 Remove a module instance
     [Arguments]    ${module_id}
@@ -30,13 +30,13 @@ Get server url
     [Arguments]    ${mid}
     ${out} =    Execute Command    runagent redis-exec HGETALL module/${mid}/srv/tcp/ldap
     &{srv} =    Evaluate    ${out}
-    [Return]    ldaps://${srv.host}:${srv.port}
+    RETURN    ldaps://${srv.host}:${srv.port}
 
 Get ldapservice credentials
     [Arguments]    ${mid}
     ${out} =    Execute Command    runagent redis-exec HGETALL module/${mid}/srv/tcp/ldap
     &{srv} =    Evaluate    ${out}
-    [Return]    ${srv.bind_dn}    ${srv.bind_password}
+    RETURN    ${srv.bind_dn}    ${srv.bind_password}
 
 RootDSE is correct
     [Arguments]    ${SURL}

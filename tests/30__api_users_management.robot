@@ -17,14 +17,14 @@ Remove test groups
 Add user first.user
     Run task    module/${MID1}/add-user    {"user":"first.user","display_name":"First User","locked":false,"groups":["g1"]}
 
-    ${out}  ${err}  ${rc} =    Execute Command    ssh -o "StrictHostKeyChecking=no" ${MID1}@localhost podman exec samba-dc pdbedit -Lv first.user
+    ${out}  ${err}  ${rc} =    Execute Command    runagent -m ${MID1} podman exec samba-dc pdbedit -Lv first.user
     ...    return_stderr=${TRUE}    return_rc=${TRUE}
     Should Be Equal As Integers    ${rc}    0
     Should Contain    ${out}    first.user
     Should Contain    ${out}    First User
     Should Not Contain    ${out}    [DU
 
-    ${out}  ${err}  ${rc} =    Execute Command    ssh -o "StrictHostKeyChecking=no" ${MID1}@localhost podman exec samba-dc samba-tool group listmembers g1
+    ${out}  ${err}  ${rc} =    Execute Command    runagent -m ${MID1} podman exec samba-dc samba-tool group listmembers g1
     ...    return_stderr=${TRUE}    return_rc=${TRUE}
     Should Be Equal As Integers    ${rc}    0
     Should Contain    ${out}    first.user
@@ -36,7 +36,7 @@ User already exists failure
 Alter user first.user
     Run task    module/${MID1}/alter-user    {"user":"first.user","display_name":"Changed display name","locked":true,"groups":["g2"]}
 
-    ${out}  ${err}  ${rc} =    Execute Command    ssh -o "StrictHostKeyChecking=no" ${MID1}@localhost podman exec samba-dc pdbedit -Lv first.user
+    ${out}  ${err}  ${rc} =    Execute Command    runagent -m ${MID1} podman exec samba-dc pdbedit -Lv first.user
     ...    return_stderr=${TRUE}    return_rc=${TRUE}
     Should Be Equal As Integers    ${rc}    0
     Should Contain    ${out}    first.user
@@ -45,12 +45,12 @@ Alter user first.user
     Should Contain    ${out}    [DU
     Should Not Contain    ${out}    [U
 
-    ${out}  ${err}  ${rc} =    Execute Command    ssh -o "StrictHostKeyChecking=no" ${MID1}@localhost podman exec samba-dc samba-tool group listmembers g1
+    ${out}  ${err}  ${rc} =    Execute Command    runagent -m ${MID1} podman exec samba-dc samba-tool group listmembers g1
     ...    return_stderr=${TRUE}    return_rc=${TRUE}
     Should Be Equal As Integers    ${rc}    0
     Should Not Contain    ${out}    first.user
 
-    ${out}  ${err}  ${rc} =    Execute Command    ssh -o "StrictHostKeyChecking=no" ${MID1}@localhost podman exec samba-dc samba-tool group listmembers g2
+    ${out}  ${err}  ${rc} =    Execute Command    runagent -m ${MID1} podman exec samba-dc samba-tool group listmembers g2
     ...    return_stderr=${TRUE}    return_rc=${TRUE}
     Should Be Equal As Integers    ${rc}    0
     Should Contain    ${out}    first.user
@@ -62,6 +62,6 @@ Alter non-existing user
 Remove user first.user
     Run task    module/${MID1}/remove-user    {"user":"first.user"}
 
-    ${out}  ${err}  ${rc} =    Execute Command    ssh -o "StrictHostKeyChecking=no" ${MID1}@localhost podman exec samba-dc pdbedit -Lv first.user
+    ${out}  ${err}  ${rc} =    Execute Command    runagent -m ${MID1} podman exec samba-dc pdbedit -Lv first.user
     ...    return_stderr=${TRUE}    return_rc=${TRUE}
     Should Not Be Equal As Integers    ${rc}    0

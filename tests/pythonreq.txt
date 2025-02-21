@@ -1,9 +1,2 @@
 robotframework
 robotframework-sshlibrary
-bcrypt
-cffi
-cryptography
-paramiko
-pycparser
-pynacl
-scp
