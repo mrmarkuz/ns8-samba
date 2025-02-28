@@ -72,9 +72,7 @@ echo "Now reading shares metadata from stdin..."
 while IFS=$'\t' read -r sharename description; do
     net conf addshare "${sharename}" "${SAMBA_SHARES_DIR:?}/${sharename}" writeable=y guest_ok=n "${description}"
     net conf setparm "${sharename}" 'acl_xattr:ignore system acls' no
+    # Grant ACL read privileges to domain controllers:
+    setfacl -m group:"domain controllers":rx "${SAMBA_SHARES_DIR}/${sharename}" || :
     echo "Enabled share ${sharename}"
 done
-
-# Grant ACL read privileges to domain controllers:
-shopt -s nullglob
-printf '%s\0' "${SAMBA_SHARES_DIR}"/* | xargs -0 -r -- setfacl -m group:"domain controllers":rx
