@@ -46,7 +46,8 @@ share_root="${SAMBA_SHARES_DIR}/${sharename}"
 # drop the sharename argument
 shift
 
-if [[ -e "${share_root}" ]]; then
+name_match=$(find /srv/shares -maxdepth 1 -type d -iname "${sharename}" -print -quit)
+if [[ -n "${name_match}" ]]; then
     echo "Directory ${sharename} already exists!" 1>&2
     exit 2
 fi

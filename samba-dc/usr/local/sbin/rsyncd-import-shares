@@ -64,13 +64,17 @@ rsync --daemon --no-detach --log-file=/dev/stderr # ready to receive data!
 
 # Fix ownership and permissions of volume roots, if the client has changed
 # them:
-chown -c root:root "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
+chown -c root:root "${SAMBA_SHARES_DIR:?}" "${SAMBA_HOMES_DIR}"
 chmod -c 0755 "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
 
 echo "Now reading shares metadata from stdin..."
 # Expecting data in TSV format: sharename <TAB> description <LF>
 while IFS=$'\t' read -r sharename description; do
-    net conf addshare "${sharename}" "${SAMBA_SHARES_DIR:?}/${sharename}" writeable=y guest_ok=n "${description}"
+    if net conf showshare "${sharename}" &>/dev/null ; then
+        echo "Ignoring previously defined share ${sharename}"
+        net conf delshare "${sharename}" &>/dev/null || :
+    fi
+    net conf addshare "${sharename}" "${SAMBA_SHARES_DIR}/${sharename}" writeable=y guest_ok=n "${description}"
     net conf setparm "${sharename}" 'acl_xattr:ignore system acls' no
     # Grant ACL read privileges to domain controllers:
     setfacl -m group:"domain controllers":rx "${SAMBA_SHARES_DIR}/${sharename}" || :
