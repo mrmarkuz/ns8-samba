@@ -58,4 +58,23 @@ if 'display_name' in request:
                    'pdbedit', '-u', user, f'--fullname={display_name}']
     subprocess.run(setname_cmd, stdout=sys.stderr, check=True, text=True)
 
+if 'mail' in request:
+    mail = request['mail']
+    # retrieve the user's DN, example:
+    # dn: CN=Administrator,CN=Users,DC=ad,DC=leader,DC=cluster0,DC=gs,DC=nethserver,DC=net
+    getdn_cmd = sambatool_cmd + ['user', 'show', user, '--attributes=dn']
+    proc = subprocess.run(getdn_cmd, check=True, capture_output=True, text=True)
+    dn = proc.stdout.strip()
+    ldbedit_cmd = ['podman', 'exec', '-i', 'samba-dc', 'ldbmodify', '-i', '-H', '/var/lib/samba/private/sam.ldb']
+    ldbedit_input = f'{dn}\nchangetype: modify\nreplace: mail\nmail: {mail}\n'
+    subprocess.run(ldbedit_cmd, input=ldbedit_input, stdout=sys.stderr, check=True, text=True)
+else:
+    # remove mail attribute
+    getdn_cmd = sambatool_cmd + ['user', 'show', user, '--attributes=dn']
+    proc = subprocess.run(getdn_cmd, check=True, capture_output=True, text=True)
+    dn = proc.stdout.strip()
+    ldbedit_cmd = ['podman', 'exec', '-i', 'samba-dc', 'ldbmodify', '-i', '-H', '/var/lib/samba/private/sam.ldb']
+    ldbedit_input = f'{dn}\nchangetype: modify\ndelete: mail\n'
+    subprocess.run(ldbedit_cmd, input=ldbedit_input, stdout=sys.stderr, check=True, text=True)
+
 json.dump({"status": "success", "message": "user_altered"}, fp=sys.stdout)
