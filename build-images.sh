@@ -5,7 +5,7 @@ images=()
 
 repobase="${REPOBASE:-ghcr.io/nethserver}"
 reponame="ubuntu-samba"
-user_manager_version=v1.0.2
+user_manager_version=v1.1.0
 
 container="ubuntu-working-container"
 # Prepare a local Ubuntu-based samba image
