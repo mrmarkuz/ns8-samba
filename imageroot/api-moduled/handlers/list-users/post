@@ -16,7 +16,7 @@ request = json.load(sys.stdin)
 
 domain = Ldapproxy().get_domain(os.environ['REALM'].lower())
 
-users = Ldapclient.factory(**domain).list_users()
+users = Ldapclient.factory(**domain).list_users(extra_info=True)
 
 users = sorted(users, key=lambda rec: rec['user'])
 

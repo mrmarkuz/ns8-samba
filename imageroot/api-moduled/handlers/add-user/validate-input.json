@@ -12,7 +12,8 @@
             "locked": false,
             "groups": [
                 "developers"
-            ]
+            ],
+            "mail": "alice@nethserver.org"
         }
     ],
     "required": [
@@ -51,6 +52,20 @@
                 "type": "string",
                 "minLength": 1
             }
+        },
+        "mail": {
+            "title": "Email address",
+            "type": "string",
+            "oneOf": [
+                {
+                    "type": "string",
+                    "format": "email"
+                },
+                {
+                    "type": "string",
+                    "maxLength": 0
+                }
+            ]
         }
     },
     "$defs": {}
