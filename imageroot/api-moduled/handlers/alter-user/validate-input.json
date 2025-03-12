@@ -56,7 +56,16 @@
         "mail": {
             "title": "Email address",
             "type": "string",
-            "format": "email"
+            "oneOf": [
+                {
+                    "type": "string",
+                    "format": "email"
+                },
+                {
+                    "type": "string",
+                    "maxLength": 0
+                }
+            ]
         }
     },
     "$defs": {}
