@@ -22,5 +22,7 @@ agent.assert_exp(agent.add_public_service(os.environ['MODULE_ID'], [
     "636/tcp", # LDAPS
     "3268/tcp", # Global Catalog
     "3269/tcp", # Global Catalog SSL
+    "3702/udp", # wsdd
+    "5357/tcp", # wsdd
     "49152-65535/tcp" # Dynamic RPC Ports
     ]))

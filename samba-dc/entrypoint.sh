@@ -24,6 +24,7 @@ if [ $# -eq 0 ]; then
 
     samba -F --debug-stdout "${extra_args[@]}" &
     chronyd -d -x &
+    wsdd -i "${IPADDRESS}" -d "${NBDOMAIN}" &
     wait -n
     exit $?
 else
