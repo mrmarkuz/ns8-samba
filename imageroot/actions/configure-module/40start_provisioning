@@ -31,7 +31,8 @@ trap "rm -f ${tmpenv}" EXIT
 (
     echo JOINADDRESS=$(print-joinaddress 2>/dev/null || :)
     echo -n "ADMINCREDS="
-    echo -en "${input[0]:?}"$'\t'"${input[1]:?}" | base64
+    echo -en "${input[0]:?}"$'\t'"${input[1]:?}" | base64 --wrap=0
+    echo
 ) > ${tmpenv}
 
 /usr/bin/podman run \
