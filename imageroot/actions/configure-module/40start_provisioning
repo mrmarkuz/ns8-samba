@@ -49,7 +49,7 @@ trap "rm -f ${tmpenv}" EXIT
     --env-file=${tmpenv} \
     --hostname=${HOSTNAME:?} \
     --log-driver=none \
-    --rm --name=${MODULE_ID}-provision \
+    --rm --name=samba-provisioning \
     --volume=data:/var/lib/samba:z \
     --volume=config:/etc/samba:z \
     --volume=shares:/srv/shares:z \
