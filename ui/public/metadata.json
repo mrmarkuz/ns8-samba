@@ -3,7 +3,7 @@
   "description": {
     "en": "Active Directory services and file sharing with SMB networking protocol"
   },
-  "categories": [],
+  "categories": ["collaboration", "storage", "core"],
   "authors": [
     {
       "name": "NethServer team",

@@ -9,6 +9,9 @@
         "next": "Next",
         "previous": "Previous"
     },
+    "software_center": {
+        "source_package": "App image"
+    },
     "status": {
         "title": "Status",
         "app_instance": "App instance",

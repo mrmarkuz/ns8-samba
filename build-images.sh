@@ -86,9 +86,8 @@ buildah config \
     --label="org.nethserver.max-per-node=1" \
     --label="org.nethserver.min-core=3.6.3-0" \
     --label "org.nethserver.images=ghcr.io/nethserver/samba-dc:${IMAGETAG:-latest}" \
-    --label 'org.nethserver.authorizations=node:fwadm ldapproxy@node:accountprovider cluster:accountprovider traefik@node:routeadm' \
+    --label 'org.nethserver.authorizations=node:fwadm cluster:accountprovider traefik@node:routeadm' \
     --label="org.nethserver.tcp-ports-demand=1" \
-    --label 'org.nethserver.flags=core_module account_provider' \
     --entrypoint=/ "${container}"
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")

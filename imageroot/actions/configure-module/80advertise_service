@@ -26,6 +26,9 @@ import os
 import sys
 import json
 
+if os.getenv("SERVER_ROLE") == "member":
+    sys.exit(0)
+
 agent_id = os.environ['AGENT_ID']
 node_id = int(os.environ['NODE_ID'])
 domain = os.environ['REALM'].lower()
@@ -33,9 +36,6 @@ base_dn = 'DC=' + domain.replace('.', ',DC=')
 svcpass = os.environ['SVCPASS']
 svcuser = os.environ['SVCUSER']
 ip_address = os.environ['IPADDRESS']
-
-if not "PROVISION_TYPE" in os.environ:
-    sys.exit(0)
 
 data={
     "node": str(node_id),
@@ -53,6 +53,7 @@ data={
 
 # Advertise this new account provider service instance:
 rdb = agent.redis_connect(privileged=True)
+rdb.sadd(agent_id + '/flags', 'core_module', 'account_provider')
 trx = rdb.pipeline()
 trx.hset(agent_id + '/srv/tcp/ldap', mapping=data)
 trx.publish(agent_id + '/event/service-ldap-changed', json.dumps({
