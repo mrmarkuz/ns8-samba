@@ -5,14 +5,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-# Changing the DC IP address is allowed if this module is the only
-# controller of the domain.
+# Changing the IP address is allowed if this module is the only
+# DC of the domain, or if the module is a domain member.
 
 set -e
 
 ipaddress=$(jq .ipaddress)
 
-if print-joinaddress &>/dev/null; then
+if [[ $SERVER_MODE == member ]]; then
+    exit 0 # Skip check 
+elif print-joinaddress &>/dev/null; then
     printf "set-status validation-failed\n" >&"${AGENT_COMFD:-2}"
     printf '[{"field":"ipaddress","parameter":"ipaddress","value":"%s","error":"peer_dc_found"}]\n' "${ipaddress}"
     exit 2

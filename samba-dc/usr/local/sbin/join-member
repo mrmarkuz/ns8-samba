@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2025 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+set -e
+
+echo "Join ${HOSTNAME} as member of domain ${REALM}"
+
+tmpout=$(mktemp)
+trap 'kdestroy ; rm -f "${tmpout}"' EXIT
+
+IFS=$'\t' read -r adminuser adminpass < <(echo -n "${ADMINCREDS}" | base64 -d ; echo)
+kinit "${adminuser}" <<<"${adminpass}" || exit 33
+{ net ads join --use-kerberos=required || exit_code=$? ; } | tee "${tmpout}"
+if [ -n $exit_code ] && grep -q "User specified does not have administrator privileges" "${tmpout}"; then
+    exit 34
+fi
+exit "${exit_code:-0}"

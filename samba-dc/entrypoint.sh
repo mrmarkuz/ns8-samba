@@ -7,11 +7,9 @@
 
 set -e
 
-expand-config
-
-ntp_signd="/var/lib/samba/ntp_signd"
-
-if [ $# -eq 0 ]; then
+function domain_controller_role ()
+{
+    ntp_signd="/var/lib/samba/ntp_signd"
     extra_args=()
     if [[ -n "${DNS_FORWARDER}" ]]; then
         extra_args+=("--option=dns forwarder=${DNS_FORWARDER}")
@@ -27,6 +25,31 @@ if [ $# -eq 0 ]; then
     wsdd -i "${IPADDRESS}" -d "${NBDOMAIN}" &
     wait -n
     exit $?
-else
+}
+
+function member_server_role ()
+{
+    wsdd -i "${IPADDRESS}" -d "${NBDOMAIN}" &
+    smbd -F --debug-stdout &
+    winbindd -F --debug-stdout &
+    nmbd -F --debug-stdout &
+    wait -n
+    exit $?
+}
+
+#
+# Expand configuration and start services
+#
+
+expand-config
+
+if [ $# -gt 0 ]; then
     exec "${@}"
+fi
+
+testparm -s 2>/dev/null
+if [ "${SERVER_ROLE}" == "member" ] ; then
+    member_server_role
+else
+    domain_controller_role
 fi

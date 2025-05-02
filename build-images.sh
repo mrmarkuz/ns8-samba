@@ -49,6 +49,8 @@ sed -r -i '/^HOME_MODE/ s/\b0750\b/0700/' /etc/login.defs
 EOF
 buildah config --cmd='' \
     --entrypoint='["/entrypoint.sh"]' \
+    --env=SERVER_ROLE=dc \
+    --env=DNS1ADDRESS=127.0.0.1 \
     --volume=/srv/shares \
     --volume=/srv/homes \
     --volume=/var/lib/samba \
