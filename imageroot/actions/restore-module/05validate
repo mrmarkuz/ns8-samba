@@ -61,6 +61,7 @@ if realm in cluster.userdomains.get_external_domains(rdb):
 elif realm in cluster.userdomains.get_internal_domains(rdb):
     # If "realm" matches an internal domain, skip DC startup to join it
     # manually later
+    # XXX: set /flags for DC too
     with agent.redis_connect(privileged=True) as rdbw:
         rdbw.set(f"module/{module_id}/user_domain", realm)
 else:

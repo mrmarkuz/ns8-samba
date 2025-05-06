@@ -51,7 +51,7 @@ with agent.redis_connect() as rdb:
 
 if not rsv.nameservers:
     # There are no DCs for the given realm. Nothing to do.
-    print(f"New Active Directory domain {realm}: no changes needed to IP routing configuration.", file=sys.stderr)
+    print(f"Active Directory domain {realm}: no changes needed to IP routing configuration.", file=sys.stderr)
     sys.exit(0)
 
 try:

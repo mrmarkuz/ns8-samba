@@ -42,7 +42,10 @@
         {
             "properties": {
                 "provision": {
-                    "const": "join-domain"
+                    "enum": [
+                        "join-domain",
+                        "join-member"
+                    ]
                 }
             },
             "required": [

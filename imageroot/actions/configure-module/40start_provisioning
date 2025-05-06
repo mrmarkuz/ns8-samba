@@ -20,20 +20,21 @@
 # along with NethServer.  If not, see COPYING.
 #
 
+exec 4>&1
 exec 1>&2
 set -e
 
 readarray -t input < <(jq -r '.adminuser, .adminpass')
 
 tmpenv=$(mktemp)
-trap "rm -f ${tmpenv}" EXIT
+trap 'rm -f "${tmpenv}"' EXIT
 
 (
-    echo JOINADDRESS=$(print-joinaddress 2>/dev/null || :)
+    echo JOINADDRESS="$(print-joinaddress 2>/dev/null || :)"
     echo -n "ADMINCREDS="
     echo -en "${input[0]:?}"$'\t'"${input[1]:?}" | base64 --wrap=0
     echo
-) > ${tmpenv}
+) > "${tmpenv}"
 
 /usr/bin/podman run \
     --dns=none \
@@ -46,12 +47,28 @@ trap "rm -f ${tmpenv}" EXIT
     --env=NBDOMAIN \
     --env=SVCPASS \
     --env=SVCUSER \
-    --env-file=${tmpenv} \
-    --hostname=${HOSTNAME:?} \
+    --env-file="${tmpenv}" \
+    --env=SERVER_ROLE \
+    --env=DNS1ADDRESS \
+    --env=DNS2ADDRESS \
+    --hostname="${HOSTNAME:?}" \
     --log-driver=none \
     --rm --name=samba-provisioning \
     --volume=data:/var/lib/samba:z \
     --volume=config:/etc/samba:z \
     --volume=shares:/srv/shares:z \
     --volume=homes:/srv/homes:z \
-    "${SAMBA_DC_IMAGE:?}" "${PROVISION_TYPE:?}"
+    "${SAMBA_DC_IMAGE:?}" "${PROVISION_TYPE:?}" || exit_code=$?
+
+if [[ $exit_code == 33 ]]; then
+    sed -i '/^IPADDRESS=/ d' environment # mark as incomplete
+    printf "set-status validation-failed\n" >&"${AGENT_COMFD:-2}"
+    printf "Provisioning error: invalid credentials\n" >&2
+    jq -n --arg name "${input[0]}" '[{"field":"adminuser", "parameter":"adminuser","value": $name, "error":"invalid_credentials"}]' >&4
+elif [[ $exit_code == 34 ]]; then
+    sed -i '/^IPADDRESS=/ d' environment # mark as incomplete
+    printf "set-status validation-failed\n" >&"${AGENT_COMFD:-2}"
+    printf "Provisioning error: insufficient permissions\n" >&2
+    jq -n --arg name "${input[0]}" '[{"field":"adminuser", "parameter":"adminuser","value": $name, "error":"insufficient_permissions"}]' >&4
+fi
+exit "${exit_code:-0}"
