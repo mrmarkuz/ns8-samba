@@ -27,6 +27,7 @@ import json
 import ipaddress as ipm
 import subprocess
 import cluster.userdomains
+import samba
 
 def fqdn2dict(fqdn, domprefix=''):
     if '.' in fqdn:
@@ -67,6 +68,7 @@ response = {
     "realm": None,
     "can_install_file_server": True, # Always True for new-domain, calculated for join-domain.
     "ipaddress_list": [],
+    "nbalias": agent.get_hostname().split('.', 1)[0], # Node short name as server alias name.
 }
 
 module_id = os.environ["MODULE_ID"]
@@ -87,46 +89,15 @@ elif request['provision'] == 'join-domain':
     response['nbdomain'] = ""
     # Calculate the permission for the given Realm.
     response['can_install_file_server'] = file_server_is_allowed(rdb, request['realm'].lower())
+elif request['provision'] == 'join-member':
+    response['hostname'] = module_id.replace("samba", "fs")
 else:
     print(agent.SD_ERR + "Invalid provision value", file=sys.stderr)
     sys.exit(1)
 
-
-with subprocess.Popen(["ip", "-j", "-4", "address", "show"], stdout=subprocess.PIPE) as proc:
-    for iface in json.load(proc.stdout):
-        try:
-            # Business rule: only one DC can provide AD services to LAN
-            # clients. Only wg0 binding is otherwise allowed if a file
-            # server already exists in a realm.
-            if response['can_install_file_server'] is False and iface["ifname"] != "wg0":
-                continue
-            # skip interface without bcast address; wg0 is handled specially
-            if iface["ifname"] != "wg0" and not 'BROADCAST' in iface["flags"]:
-                continue
-            # skip CNI interfaces
-            if iface["ifname"].startswith('cni-'):
-                continue
-        except KeyError:
-            pass
-
-        ifip_list = [] # this list collects private ip addresses for iface
-        for ainfo in iface['addr_info']:
-            addr = ipm.ip_address(ainfo['local'])
-            if addr.is_private and not (addr.is_unspecified or addr.is_reserved or addr.is_loopback or addr.is_link_local):
-                altnames = ""
-                if 'altnames' in iface:
-                    altnames = f" ({', '.join(iface['altnames'])})"
-                ifip_list.append({
-                    "ipaddress": ainfo['local'],
-                    "label": iface['ifname'] + altnames
-                })
-            else:
-                # If the interface has at least a non-private
-                # address, ignore it completely
-                break
-        else:
-            # If the loop completes without breaking, add collected
-            # ip addresses to the response list
-            response['ipaddress_list'] += ifip_list
+response['ipaddress_list'] = samba.ipaddress_list(
+    # List only wg0 if file server is not allowed
+    only_wg0=(response['can_install_file_server'] is False),
+)
 
 json.dump(response, fp=sys.stdout)

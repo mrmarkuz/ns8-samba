@@ -1,0 +1,47 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "set-nbalias input",
+    "$id": "http://schema.nethserver.org/samba/configure-module-input.json",
+    "description": "Change the basic configuration of the server",
+    "examples": [
+        {
+            "nbalias": "ns7fs",
+            "ipaddress": "192.168.1.1",
+            "adminuser": "administrator@ad.domain.org",
+            "adminpass": "s3cr3t"
+        }
+    ],
+    "type": "object",
+    "anyOf": [
+        {
+            "required": [
+                "nbalias"
+            ]
+        },
+        {
+            "required": [
+                "ipaddress"
+            ]
+        }
+    ],
+    "properties": {
+        "ipaddress": {
+            "type": "string",
+            "format": "ipv4"
+        },
+        "adminuser": {
+            "type": "string",
+            "minLength": 1
+        },
+        "adminpass": {
+            "type": "string",
+            "minLength": 1
+        },
+        "nbalias": {
+            "type": "string",
+            "pattern": "^([a-zA-Z][-a-zA-Z0-9]*)?$",
+            "description": "Server alias name to access shared folders. An empty string removes the alias.",
+            "maxLength": 15
+        }
+    }
+}

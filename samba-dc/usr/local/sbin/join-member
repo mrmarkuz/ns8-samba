@@ -9,13 +9,18 @@ set -e
 
 echo "Join ${HOSTNAME} as member of domain ${REALM}"
 
-tmpout=$(mktemp)
-trap 'kdestroy ; rm -f "${tmpout}"' EXIT
-
 IFS=$'\t' read -r adminuser adminpass < <(echo -n "${ADMINCREDS}" | base64 -d ; echo)
 kinit "${adminuser}" <<<"${adminpass}" || exit 33
+tmpout=$(mktemp)
+trap 'kdestroy ; rm -f "${tmpout}"' EXIT
 { net ads join --use-kerberos=required || exit_code=$? ; } | tee "${tmpout}"
 if [ -n $exit_code ] && grep -q "User specified does not have administrator privileges" "${tmpout}"; then
     exit 34
+fi
+if [ -n "${NBALIAS}" ]; then
+    net ads setspn add "$(hostname -s)" "HOST/${NBALIAS^^}" || :
+    net ads setspn add "$(hostname -s)" "HOST/${NBALIAS^^}.${REALM,,}" || :
+    dcname="$(net ads lookup | awk '/^Domain Controller:/ {{ print $3 }}')"
+    samba-tool dns add "${dcname:?error_DC_not_found}" "${REALM}" "${NBALIAS,,}" CNAME "${HOSTNAME}" || :
 fi
 exit "${exit_code:-0}"

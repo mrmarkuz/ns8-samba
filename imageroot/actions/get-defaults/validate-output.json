@@ -41,6 +41,10 @@
         "hostname": {
             "type": "string"
         },
+        "nbalias": {
+            "type": "string",
+            "description": "Server alias name"
+        },
         "realm": {
             "type": "string"
         },

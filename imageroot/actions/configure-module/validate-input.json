@@ -77,6 +77,13 @@
         "hostname": {
             "type": "string",
             "pattern": "^[a-zA-Z][-a-zA-Z0-9]*$",
+            "description": "Short host/computer name for the AD machine account",
+            "maxLength": 15
+        },
+        "nbalias": {
+            "type": "string",
+            "pattern": "^([a-zA-Z][-a-zA-Z0-9]*)?$",
+            "description": "Server alias name to access shared folders. An empty string removes the alias.",
             "maxLength": 15
         },
         "realm": {

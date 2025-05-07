@@ -99,6 +99,7 @@ with agent.redis_connect() as rdb:
 agent.set_env('SERVER_ROLE', server_role)
 agent.set_env('PROVISION_TYPE', provision_type)
 agent.set_env('NBDOMAIN', nbdomain)
+agent.set_env('NBALIAS', request.get('nbalias', ''))
 agent.set_env('REALM', realm) # The AD Kerberos realm or domain name
 agent.set_env('DOMAIN', kdomain) # The NS8 domain name
 agent.set_env('HOSTNAME', hostname + '.' + realm.lower())

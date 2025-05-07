@@ -21,6 +21,7 @@
 import ipaddress as ipm
 import subprocess
 import socket
+import json
 
 class SambaException(Exception):
     pass
@@ -73,3 +74,49 @@ def ipaddress_check_hasfreeports(ipaddress):
             raise IpBindError(ipaddress, f"Address {ipaddress}:{tcp_port} bind failed: {ex}") from ex
 
     return True
+
+def ipaddress_list(skip_wg0=False, only_wg0=False):
+    proc = subprocess.run(["ip", "-j", "-4", "address", "show"], text=True, capture_output=True)
+    try:
+        joutput = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return []
+
+    ipaddresses = []
+    for iface in joutput:
+        try:
+            # skip wg0, as required by arguments
+            if iface["ifname"] == "wg0" and skip_wg0:
+                continue
+            # skip non-wg0 interfaces, as required by arguments
+            if iface["ifname"] != "wg0" and only_wg0:
+                continue
+            # skip interface without bcast address; wg0 is handled specially
+            if iface["ifname"] != "wg0" and not 'BROADCAST' in iface["flags"]:
+                continue
+            # skip CNI interfaces
+            if iface["ifname"].startswith('cni-'):
+                continue
+        except KeyError:
+            pass
+
+        ifip_list = [] # this list collects private ip addresses for iface
+        for ainfo in iface['addr_info']:
+            addr = ipm.ip_address(ainfo['local'])
+            if addr.is_private and not (addr.is_unspecified or addr.is_reserved or addr.is_loopback or addr.is_link_local):
+                altnames = ""
+                if 'altnames' in iface:
+                    altnames = f" ({', '.join(iface['altnames'])})"
+                ifip_list.append({
+                    "ipaddress": ainfo['local'],
+                    "label": iface['ifname'] + altnames
+                })
+            else:
+                # If the interface has at least a non-private
+                # address, ignore it completely
+                break
+        else:
+            # If the loop completes without breaking, add collected
+            # ip addresses to the response list
+            ipaddresses += ifip_list
+    return ipaddresses

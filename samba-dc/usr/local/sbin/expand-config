@@ -51,6 +51,7 @@ cat - >/etc/samba/smb.conf <<EOF
         bind interfaces only = Yes
         interfaces = 127.0.0.1 ${IPADDRESS}${PREFIXLEN:+/}${PREFIXLEN}
         netbios name = ${nbname^^}
+        netbios aliases = ${NBALIAS}
         realm = ${REALM^^}
         workgroup = ${NBDOMAIN}
         log level = ${SAMBA_LOGLEVEL:-1}

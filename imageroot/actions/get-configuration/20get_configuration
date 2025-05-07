@@ -8,17 +8,26 @@
 import json
 import sys
 import os
+import samba
 
-if 'REALM' in os.environ:
-    realm = os.environ["REALM"].lower()
-else:
-    realm = None
+def main():
+    config = {
+        'credentials_required': os.getenv("SERVER_ROLE") == "member",
+        'realm': get_realm_lc(),
+        'domain': os.getenv('DOMAIN', get_realm_lc()),
+        'nbalias': os.getenv('NBALIAS'),
+        'nbdomain': os.getenv('NBDOMAIN'),
+        'ipaddress': os.getenv('IPADDRESS'),
+        'ipaddress_list': samba.ipaddress_list(skip_wg0=True),
+        'hostname': os.getenv('HOSTNAME')
+    }
+    json.dump(config, fp=sys.stdout)
 
-config = {
-    'realm': realm,
-    'nbdomain': os.getenv('NBDOMAIN'),
-    'ipaddress': os.getenv('IPADDRESS'),
-    'hostname': os.getenv('HOSTNAME')
-}
+def get_realm_lc():
+    try:
+        return os.environ["REALM"].lower()
+    except KeyError:
+        return None
 
-json.dump(config, fp=sys.stdout)
+if __name__ == "__main__":
+    main()
