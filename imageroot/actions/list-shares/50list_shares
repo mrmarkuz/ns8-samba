@@ -12,7 +12,6 @@ import subprocess
 import configparser
 
 podman_exec = ["podman", "exec", "samba-dc"]
-nbdomain = os.environ["NBDOMAIN"]
 
 def read_acls(share_name):
     """
@@ -41,7 +40,7 @@ def read_acls(share_name):
         if ifields[0] != "ACL":
             continue # Consider only ACL entries
 
-        subject_name = ifields[1].removeprefix(nbdomain + "\\")
+        subject_name = ifields[1].removeprefix(os.environ["NBDOMAIN"] + "\\")
         ace_type, _, ace_rights = ifields[2].split("/", 2)
 
         if ace_type != "ALLOWED":

@@ -10,7 +10,7 @@ import sys
 import agent
 import cluster.userdomains
 
-kdomain = os.environ['REALM'].lower()
+kdomain = os.getenv('DOMAIN', environ['REALM'].lower())
 
 rdb = agent.redis_connect()
 domains = cluster.userdomains.get_internal_domains(rdb)
