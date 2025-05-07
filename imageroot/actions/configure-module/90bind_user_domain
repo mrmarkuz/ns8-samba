@@ -18,7 +18,7 @@ rdb = agent.redis_connect()
 module_id = os.environ["MODULE_ID"]
 has_file_server_flag = bool(rdb.sismember(f'module/{module_id}/flags', 'file_server'))
 if has_file_server_flag:
-    domain = os.environ['REALM'].lower()
+    domain = os.getenv('DOMAIN', os.environ['REALM'].lower())
     agent.bind_user_domains([domain], check=False)
 else:
     agent.bind_user_domains([], check=False)

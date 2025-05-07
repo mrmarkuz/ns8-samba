@@ -31,7 +31,7 @@ if os.getenv("SERVER_ROLE") == "member":
 
 agent_id = os.environ['AGENT_ID']
 node_id = int(os.environ['NODE_ID'])
-domain = os.environ['REALM'].lower()
+domain = os.getenv('DOMAIN', os.environ['REALM'].lower())
 base_dn = 'DC=' + domain.replace('.', ',DC=')
 svcpass = os.environ['SVCPASS']
 svcuser = os.environ['SVCUSER']
