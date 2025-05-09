@@ -43,7 +43,7 @@
       <cv-column :md="4" :max="4">
         <NsInfoCard
           light
-          :title="configuration ? configuration.realm : '-'"
+          :title="configuration ? configuration.domain : '-'"
           :description="$t('status.domain')"
           :icon="Events32"
           :loading="!configuration"
