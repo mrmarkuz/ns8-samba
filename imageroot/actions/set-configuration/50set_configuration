@@ -14,8 +14,13 @@ import samba
 
 def main():
     request = json.load(sys.stdin)
-    if 'ipaddress' in request:
-        validate_ipaddress(request) # exit here if something is wrong
+    if 'ipaddress' in request and os.getenv('IPADDRESS') != request['ipaddress']:
+        available_values = { el['ipaddress'] for el in samba.ipaddress_list(skip_wg0=True) }
+        if not request['ipaddress'] in available_values:
+            agent.set_status('validation-failed')
+            json.dump([{"field":"ipaddress","parameter":"ipaddress","value": request['ipaddress'],"error":"ipaddress_avail_check_failed"}], fp=sys.stdout)
+            sys.exit(3)
+        samba.validate_ipaddress(request['ipaddress']) # Check the IP is free, exit if not.
 
     if os.getenv("SERVER_ROLE") == "member":
         credentials_required(request)
@@ -29,24 +34,6 @@ def main():
 
     if any(changed):
         agent.run_helper('systemctl', '--user', 'try-restart', 'samba-dc')
-
-def validate_ipaddress(request):
-    ipaddress = request['ipaddress']
-    try:
-        samba.ipaddress_check(ipaddress)
-    except samba.IpNotPrivate:
-        agent.set_status('validation-failed')
-        json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_private_check_failed"}], fp=sys.stdout)
-        sys.exit(2)
-    except samba.IpNotAvailable:
-        agent.set_status('validation-failed')
-        json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_avail_check_failed"}], fp=sys.stdout)
-        sys.exit(3)
-    except samba.IpBindError as ex:
-        print(ex, file=sys.stderr)
-        agent.set_status('validation-failed')
-        json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ex.ipaddr,"error":"ipaddress_bind_check_failed"}], fp=sys.stdout)
-        sys.exit(4)
 
 def credentials_required(request):
     if not 'adminpass' in request or not 'adminuser' in request:
@@ -105,6 +92,11 @@ def set_nbalias(request):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
+    handle_script_returncode(proc, adminuser, new_nbalias)
+    agent.set_env('NBALIAS', new_nbalias)
+    return True
+
+def handle_script_returncode(proc, adminuser, new_nbalias):
     print(proc.stdout, file=sys.stderr)
     if proc.returncode == 33:
         agent.set_status('validation-failed')
@@ -122,15 +114,39 @@ def set_nbalias(request):
         sys.exit(35)
     elif proc.returncode != 0:
         sys.exit(proc.returncode)
-    agent.set_env('NBALIAS', new_nbalias)
-    return True
 
 def set_ipaddress(request):
     if os.getenv('IPADDRESS') == request['ipaddress']:
         return False
+    new_ipaddress = request['ipaddress']
+    old_ipaddress = os.getenv('IPADDRESS', '')
+    realm = os.environ['REALM'].lower()
+    shostname = os.environ["HOSTNAME"].split(".", 1)[0]
+    if os.getenv("SERVER_ROLE") == "member":
+        # Update the DNS record of the File Server domain member
+        dns_script = f"""
+        set -e
+        kinit "${{ADMINUSER}}" || exit 33
+        trap kdestroy EXIT
+        dcname="$(net ads lookup | awk '/^Domain Controller:/ {{ print $3 }}')"
+        [ -n "{old_ipaddress}" ] && samba-tool dns delete $dcname "{realm}" "{shostname}" A "{old_ipaddress}" || :
+        samba-tool dns add $dcname "{realm}" "{shostname}" A "{new_ipaddress}" || :
+        """
+        adminuser = request['adminuser']
+        script_input = request['adminpass'] + "\n"
+        proc = subprocess.run(
+            ["podman", "exec", "-i", "--env=ADMINUSER="+adminuser, "samba-dc", "bash", "-c", dns_script],
+            text=True,
+            input=script_input,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        handle_script_returncode(proc, adminuser, "")
     agent.set_env('IPADDRESS', request['ipaddress'])
     if os.getenv("SERVER_ROLE") != "member":
-        subprocess.run(['../configure-module/80advertise_service'], input='', text=True, output=sys.stderr)
+        # Push the new DC address in VPN routes
+        samba.push_vpn_routes()
+    subprocess.run(['../actions/configure-module/80advertise_service'], input='', text=True, stdout=sys.stderr)
     return True
 
 if __name__ == "__main__":

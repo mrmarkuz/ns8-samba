@@ -25,6 +25,7 @@ import json
 import dns.resolver
 import sys
 import agent
+import os
 
 class SambaException(Exception):
     pass
@@ -152,3 +153,38 @@ def validate_hostname(hostname, realm, nameservers=[]):
         sys.exit(11)
     except dns.resolver.NXDOMAIN:
         pass
+
+def validate_ipaddress(ipaddress):
+    try:
+        ipaddress_check(ipaddress)
+    except IpNotPrivate:
+        agent.set_status('validation-failed')
+        json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_private_check_failed"}], fp=sys.stdout)
+        sys.exit(2)
+    except IpNotAvailable:
+        agent.set_status('validation-failed')
+        json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_avail_check_failed"}], fp=sys.stdout)
+        sys.exit(3)
+    except IpBindError as ex:
+        print(ex, file=sys.stderr)
+        agent.set_status('validation-failed')
+        json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ex.ipaddr,"error":"ipaddress_bind_check_failed"}], fp=sys.stdout)
+        sys.exit(4)
+
+def push_vpn_routes():
+    node_id = int(os.environ['NODE_ID'])
+    rdb = agent.redis_connect()
+    oip_address = ipm.ip_address(os.environ['IPADDRESS'])
+    ocluster_network = ipm.ip_network(rdb.get('cluster/network'), strict=False)
+    if not oip_address in ocluster_network:
+        agent.tasks.run(
+            agent_id='cluster',
+            action='update-routes',
+            data={
+                'add': [{
+                    "ip_address": os.environ['IPADDRESS'],
+                    "node_id": node_id,
+                }],
+            },
+            extra={"isNotificationHidden": True},
+        )

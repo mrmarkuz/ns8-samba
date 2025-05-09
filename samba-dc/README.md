@@ -214,3 +214,8 @@ issues, but they are actually harmless and can be safely ignored.
 - `Failed with NT_STATUS_INVALID_SID.` Special SIDs used by some
   authentication methods (e.g., Kerberos) are not properly mapped by
   Winbind.
+
+- `TSIG error with server: tsig verify failure`,
+  `dnsupdate_nameupdate_done: Failed DNS update with exit code 10` Another
+  race condition. DNS records will be updated correctly when Samba has
+  started.

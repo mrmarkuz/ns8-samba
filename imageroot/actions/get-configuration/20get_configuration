@@ -20,7 +20,8 @@ def main():
         'nbdomain': os.getenv('NBDOMAIN'),
         'ipaddress': os.getenv('IPADDRESS'),
         'ipaddress_list': samba.ipaddress_list(skip_wg0=True),
-        'hostname': os.getenv('HOSTNAME')
+        'ipaddress_alterable': get_ipaddress_alterable(),
+        'hostname': get_hostname(),
     }
     json.dump(config, fp=sys.stdout)
 
@@ -42,6 +43,10 @@ def get_realm_lc():
         return os.environ["REALM"].lower()
     except KeyError:
         return None
+
+def get_hostname():
+    hostname = os.getenv('HOSTNAME', os.environ['MODULE_ID'].replace('samba', 'fs'))
+    return hostname.split('.', 1)[0] # return short hostname
 
 if __name__ == "__main__":
     main()

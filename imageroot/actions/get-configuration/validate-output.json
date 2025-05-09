@@ -13,6 +13,7 @@
         "hostname",
         "ipaddress",
         "ipaddress_list",
+        "ipaddress_alterable",
         "credentials_required"
     ],
     "properties": {
@@ -74,6 +75,10 @@
                     }
                 }
             }
+        },
+        "ipaddress_alterable": {
+            "type": "boolean",
+            "description": "True if ipaddress can be changed with set-configuration"
         },
         "ipaddress": {
             "type": [

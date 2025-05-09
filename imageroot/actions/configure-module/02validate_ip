@@ -29,20 +29,4 @@ import samba
 agent.set_weight(os.path.basename(__file__), 0) # Validation step, no task progress at all
 
 request = json.load(sys.stdin)
-ipaddress = request['ipaddress']
-
-try:
-    samba.ipaddress_check(ipaddress)
-except samba.IpNotPrivate:
-    agent.set_status('validation-failed')
-    json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_private_check_failed"}], fp=sys.stdout)
-    sys.exit(2)
-except samba.IpNotAvailable:
-    agent.set_status('validation-failed')
-    json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddress,"error":"ipaddress_avail_check_failed"}], fp=sys.stdout)
-    sys.exit(3)
-except samba.IpBindError as ex:
-    print(ex, file=sys.stderr)
-    agent.set_status('validation-failed')
-    json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ex.ipaddr,"error":"ipaddress_bind_check_failed"}], fp=sys.stdout)
-    sys.exit(4)
+samba.validate_ipaddress(request['ipaddress'])
