@@ -29,6 +29,7 @@ import string
 import cluster.userdomains
 import ipaddress
 import socket
+import samba
 from agent.ldapproxy import Ldapproxy
 from agent.ldapclient import Ldapclient
 
@@ -66,12 +67,12 @@ with agent.redis_connect() as rdb:
         # Get the provider IP address to configure our DNS resolv.conf
         try:
             addrinfo = socket.getaddrinfo(peer_address, 53)
+            dns1address = addrinfo[0][4][0]
         except Exception as ex:
             print(agent.SD_ERR, "Address resolution error:", ex, file=sys.stderr)
             json.dump([{"field": "realm", "parameter": "realm", "value": realm, "error": "realm_dc_avail_check_failed"}], fp=sys.stdout)
             agent.set_status('validation-failed')
             sys.exit(6)
-        agent.set_env('DNS1ADDRESS', addrinfo[0][4][0])
         # Look up NBDOMAIN in AD LDAP with the first domain provider:
         domparams = Ldapproxy().get_domain(kdomain)
         ldapconn = Ldapclient.factory(**domparams).ldapconn
@@ -92,6 +93,8 @@ with agent.redis_connect() as rdb:
             attributes=['*'],
         )
         realm = results[2][0]['attributes']['defaultNamingContext'][0].upper().removeprefix("DC=").replace(",DC=", ".")
+        samba.validate_hostname(request['hostname'], realm.lower(), nameservers=[dns1address])
+        agent.set_env('DNS1ADDRESS', dns1address)
     else:
         print(agent.SD_ERR + "Bogus provision value! " + provision_type, file=sys.stderr)
         sys.exit(1)

@@ -22,6 +22,9 @@ import ipaddress as ipm
 import subprocess
 import socket
 import json
+import dns.resolver
+import sys
+import agent
 
 class SambaException(Exception):
     pass
@@ -120,3 +123,32 @@ def ipaddress_list(skip_wg0=False, only_wg0=False):
             # ip addresses to the response list
             ipaddresses += ifip_list
     return ipaddresses
+
+def validate_hostname(hostname, realm, nameservers=[]):
+    rsv = dns.resolver.Resolver(configure=False)
+    rsv.nameservers.extend(nameservers)
+    try:
+        resolve_ret = rsv.resolve(realm)
+        print("DNS nameserver", resolve_ret.nameserver, file=sys.stderr)
+        print("DNS authority", resolve_ret.response.authority, file=sys.stderr)
+        print("Domain", resolve_ret.rrset.to_text(), file=sys.stderr)
+    except dns.resolver.NoAnswer:
+        json.dump([{"field": "realm", "parameter": "realm", "value": realm, "error": "realm_dc_avail_check_failed"}], fp=sys.stdout)
+        agent.set_status('validation-failed')
+        sys.exit(6)
+    except dns.exception.Timeout:
+        json.dump([{"field": "realm", "parameter": "realm", "value": realm, "error": "realm_dc_reachable_check_failed"}], fp=sys.stdout)
+        agent.set_status('validation-failed')
+        sys.exit(7)
+
+    #
+    # Check if the hostname is already registered in the DNS
+    #
+    try:
+        hostname_resolve_ret = rsv.resolve(hostname + '.' + realm)
+        print(agent.SD_ERR + f"DC hostname {hostname} is already in DNS!", hostname_resolve_ret.rrset.to_text(), file=sys.stderr)
+        json.dump([{"field": "hostname", "parameter": "hostname", "value": hostname, "error": "hostname_check_failed"}], fp=sys.stdout)
+        agent.set_status('validation-failed')
+        sys.exit(11)
+    except dns.resolver.NXDOMAIN:
+        pass
