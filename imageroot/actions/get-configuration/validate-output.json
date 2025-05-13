@@ -6,6 +6,7 @@
     "examples": [],
     "type": "object",
     "required": [
+        "configuration_required",
         "realm",
         "domain",
         "nbdomain",
@@ -15,6 +16,10 @@
         "credentials_required"
     ],
     "properties": {
+        "configuration_required": {
+            "type": "boolean",
+            "description": "True if action set-configuration must be called to finish the configuration and start the Samba services"
+        },
         "credentials_required": {
             "type": "boolean",
             "description": "True if calling set-configuration requires admin credentials"

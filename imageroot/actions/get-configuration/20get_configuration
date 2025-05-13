@@ -12,6 +12,7 @@ import samba
 
 def main():
     config = {
+        'configuration_required': get_configuration_required(),
         'credentials_required': os.getenv("SERVER_ROLE") == "member",
         'realm': get_realm_lc(),
         'domain': os.getenv('DOMAIN', get_realm_lc()),
@@ -22,6 +23,19 @@ def main():
         'hostname': os.getenv('HOSTNAME')
     }
     json.dump(config, fp=sys.stdout)
+
+def get_configuration_required():
+    if not os.getenv('REALM'):
+        return True
+    if not os.getenv('IPADDRESS'):
+        return True
+    return False
+
+def get_ipaddress_alterable():
+    if os.getenv("SERVER_ROLE") == "member":
+        return True
+    # XXX if print-joinaddress is empty, return True
+    return False
 
 def get_realm_lc():
     try:
