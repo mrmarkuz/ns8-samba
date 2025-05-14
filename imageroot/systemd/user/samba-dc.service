@@ -1,5 +1,7 @@
 [Unit]
 Description=Samba DC and File Server
+Wants=timescaledb.service
+After=timescaledb.service
 
 
 [Service]
@@ -33,6 +35,7 @@ ExecStart=/usr/bin/podman run \
     --env=DNS2ADDRESS \
     --env=NBALIAS \
     --env-file=dns_forwarder.env \
+    --env-file=timescaledb.env \
     --volume=data:/var/lib/samba:z \
     --volume=config:/etc/samba:z \
     --volume=shares:/srv/shares:z \

@@ -27,6 +27,7 @@ The container uses the following ports:
 - `636/tcp`, LDAPS
 - `3268/tcp`, Global Catalog
 - `3269/tcp`,  Global Catalog SSL
+- `15432/tcp`, TimescaleDB for Audit Log
 - `49152-65535/tcp` Dynamic RPC Ports
 
 ## Volumes
@@ -219,3 +220,8 @@ issues, but they are actually harmless and can be safely ignored.
   `dnsupdate_nameupdate_done: Failed DNS update with exit code 10` Another
   race condition. DNS records will be updated correctly when Samba has
   started.
+
+- `smart-multi-line: error opening smart-multi-line.fsm file`, `your
+  smart-multi-line.fsm seems to be empty or non-existent`. These messages
+  are from `syslog-ng` which expects a file not packaged in Ubuntu 24.04.2
+  LTS (Noble Numbat).

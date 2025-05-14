@@ -61,11 +61,17 @@ cat - >/etc/samba/smb.conf <<EOF
         obey pam restrictions = yes
         registry shares = yes
         inherit owner = yes
+        full_audit:prefix = %R|%I|%u|%S
+        full_audit:facility = LOCAL7
+        full_audit:priority = INFO
+        full_audit:success = none
+        full_audit:failure = none
+
 EOF
 
 if [[ "${SERVER_ROLE}" == "member" ]] ; then
 cat - >>/etc/samba/smb.conf <<ROLEMEMBER
-        vfs objects = acl_xattr
+        vfs objects = acl_xattr full_audit
         winbind use default domain = yes
         idmap config * : backend = tdb
         idmap config * : range = 1001-1999
@@ -80,7 +86,7 @@ cat - >>/etc/samba/smb.conf <<ROLEMEMBER
 ROLEMEMBER
 else
 cat - >>/etc/samba/smb.conf <<ROLEDC
-        vfs objects = dfs_samba4 acl_xattr
+        vfs objects = dfs_samba4 acl_xattr full_audit
         server role = active directory domain controller
         include = /etc/samba/include.conf
 

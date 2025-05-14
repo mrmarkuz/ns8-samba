@@ -23,6 +23,7 @@ function domain_controller_role ()
     samba -F --debug-stdout "${extra_args[@]}" &
     chronyd -d -x &
     wsdd -i "${IPADDRESS}" -d "${NBDOMAIN}" &
+    syslog-ng -F --no-caps &
     wait -n
     exit $?
 }
@@ -33,6 +34,7 @@ function member_server_role ()
     smbd -F --debug-stdout &
     winbindd -F --debug-stdout &
     nmbd -F --debug-stdout &
+    syslog-ng -F --no-caps &
     wait -n
     exit $?
 }
