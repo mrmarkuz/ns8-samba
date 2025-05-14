@@ -207,3 +207,18 @@ def get_joinaddress():
         raise SambaException(f'DC for "{kdomain}" not found')
 
     return provider['host']
+
+def configure_samba_audit(sharename, enable_audit=True, log_failed_events=False):
+    podman_exec = ["podman", "exec", "samba-dc"]
+    setparm_cmd = podman_exec + ["net", "conf", "setparm", sharename]
+    delparm_cmd = podman_exec + ["net", "conf", "delparm", sharename]
+    enabled_success_operations = os.getenv("SAMBA_AUDIT_SUCCESS", "create_file unlinkat renameat mkdirat fsetxattr")
+    enabled_failure_operations = os.getenv("SAMBA_AUDIT_FAILURE", "create_file unlinkat renameat mkdirat fsetxattr")
+    set_audit_cmd = delparm_cmd + ["full_audit:success"]
+    set_logfailed_cmd = delparm_cmd + ["full_audit:failure"]
+    if enable_audit:
+        set_audit_cmd = setparm_cmd + ["full_audit:success", enabled_success_operations]
+        if log_failed_events:
+            set_logfailed_cmd = setparm_cmd + ["full_audit:failure", enabled_failure_operations]
+    agent.run_helper(*set_audit_cmd, stderr=subprocess.DEVNULL)
+    agent.run_helper(*set_logfailed_cmd, stderr=subprocess.DEVNULL)

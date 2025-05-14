@@ -5,6 +5,12 @@
     "description": "Alter a shared folder",
     "examples": [
         {
+            "name": "myshare002",
+            "description": "With Samba Audit",
+            "enable_audit": true,
+            "log_failed_events": false
+        },
+        {
             "name": "myshare001",
             "description": "New description"
         }
@@ -14,6 +20,14 @@
         "name"
     ],
     "properties": {
+        "enable_audit": {
+            "type": "boolean",
+            "description": "Enable the basic audit log for the share"
+        },
+        "log_failed_events": {
+            "type": "boolean",
+            "description": "Add failed events to the audit log"
+        },
         "name": {
             "type": "string",
             "description": "The name of the share and of the underlying directory",

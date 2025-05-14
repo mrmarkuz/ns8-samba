@@ -177,6 +177,48 @@ If Samba runs as a DC and is bound to the **internal VPN interface** (see
 the `ipaddress` attribute in the Provision section), it will be
 **inaccessible** to clients from other networks.
 
+## Samba Audit
+
+User activity on shared folders is recorded in a TimescaleDB instance.
+
+Access TimescaleDB on port 15432 as user `postgres` (full privileges) or
+`samba_audit` (select-only privileges). Passwords are saved into
+`state/timescaledb.env`
+
+By default, no events from the Samba `vfs_full_audit` module are logged.
+Audit logging must be explicitly enabled per share using the share
+management actions. For example:
+
+    api-cli run module/samba1/alter-share --data '{"name":"myshare","enable_audit":true}'
+
+To include failed access attempts in the audit log, add the
+`log_failed_events` attribute:
+
+    api-cli run module/samba1/alter-share --data '{"name":"myshare","enable_audit":true,"log_failed_events":true}'
+
+The following events are logged to TimescaleDB by default:
+
+* **Success events**: `create_file unlinkat renameat mkdirat fsetxattr`
+* **Failure events**: `create_file openat unlinkat renameat mkdirat
+  fsetxattr`
+
+You can override these defaults using the following environment variables:
+
+* `SAMBA_AUDIT_SUCCESS`
+* `SAMBA_AUDIT_FAILURE`
+
+For example, to log all successful events, add the following line to the
+`state/environment` file:
+
+    SAMBA_AUDIT_SUCCESS=all
+
+The change takes effect the next time an `alter-share` or `add-share`
+action is executed.
+
+Review the current audit settings with this command:
+
+    podman exec samba-dc net conf list
+
 ## Restore from backup
 
 The module backup contains shared folders, home dirs and DC state.

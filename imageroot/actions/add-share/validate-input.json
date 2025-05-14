@@ -5,6 +5,12 @@
     "description": "Create a new shared folder",
     "examples": [
         {
+            "name": "myshare002",
+            "description": "With Samba Audit",
+            "enable_audit": true,
+            "log_failed_events": false
+        },
+        {
             "name": "myshare001",
             "description": "First share"
         },
@@ -20,6 +26,14 @@
         "name"
     ],
     "properties": {
+        "enable_audit": {
+            "type": "boolean",
+            "description": "Enable the basic audit log for the share"
+        },
+        "log_failed_events": {
+            "type": "boolean",
+            "description": "Add failed events to the audit log"
+        },
         "name": {
             "type": "string",
             "pattern": "^[^/\\\\:><\"|?*]+$",

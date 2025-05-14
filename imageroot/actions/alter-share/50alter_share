@@ -8,6 +8,7 @@
 import sys
 import json
 import agent
+import samba
 
 podman_exec = ["podman", "exec", "samba-dc"]
 
@@ -20,9 +21,12 @@ if pcheck.returncode != 0:
     json.dump([{'field':'name', 'parameter':'name','value': request['name'], 'error':'share_not_found'}], fp=sys.stdout)
     sys.exit(2)
 
-samba_add_share = podman_exec + ["net", "conf", "setparm", request["name"]]
-
 if 'description' in request:
-    samba_add_share += ["comment", request["description"]]
+    set_description_cmd = podman_exec + ["net", "conf", "setparm", request["name"], "comment", request["description"]]
+    agent.run_helper(*set_description_cmd)
 
-phelper = agent.run_helper(*samba_add_share).check_returncode()
+if 'enable_audit' in request:
+    samba.configure_samba_audit(
+        request['name'],
+        request['enable_audit'],
+        request.get('log_failed_events', False))

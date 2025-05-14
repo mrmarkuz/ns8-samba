@@ -78,11 +78,20 @@ with subprocess.Popen(podman_exec + ["net", "conf", "list"], stdout=subprocess.P
 
 psharenames = subprocess.run(podman_exec + ["net", "conf", "listshares"], stdout=subprocess.PIPE, text=True)
 for share_name in filter(None, psharenames.stdout.split("\n")):
-    comment = ocfg.get(share_name, "comment") or ""
+    if not share_name in ocfg:
+        continue
+
+    # Calculate audit settings
+    full_audit_success = ocfg[share_name].get("full_audit:success", "none")
+    full_audit_failure = ocfg[share_name].get("full_audit:failure", "none")
+    enable_audit = full_audit_success != "none" or full_audit_failure != "none"
+    log_failed_events = enable_audit and full_audit_failure != "none"
 
     list_shares['shares'].append({
         "name": share_name,
-        "description": comment,
+        "description": ocfg[share_name].get("comment", ""),
+        "enable_audit": enable_audit,
+        "log_failed_events": log_failed_events,
         "acls": read_acls(share_name),
     })
 

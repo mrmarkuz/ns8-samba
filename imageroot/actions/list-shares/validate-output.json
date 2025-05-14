@@ -8,6 +8,8 @@
             "shares": [
                 {
                     "name": "myshare001",
+                    "enable_audit": false,
+                    "log_failed_events": false,
                     "description": "First share",
                     "acls": [
                         {
@@ -30,6 +32,8 @@
                 },
                 {
                     "name": "myshare002",
+                    "enable_audit": true,
+                    "log_failed_events": false,
                     "description": "Second share",
                     "acls": [
                         {
@@ -74,6 +78,14 @@
                     "type": "string",
                     "title": "Share description",
                     "description": "Free text, known also as \"comment\""
+                },
+                "enable_audit": {
+                    "type": "boolean",
+                    "description": "The basic audit log for the share is enabled"
+                },
+                "log_failed_events": {
+                    "type": "boolean",
+                    "description": "Failed events are written to the audit log"
                 },
                 "acls": {
                     "type": "array",
