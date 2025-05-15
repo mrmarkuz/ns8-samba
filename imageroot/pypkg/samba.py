@@ -26,6 +26,7 @@ import dns.resolver
 import sys
 import agent
 import os
+import cluster.userdomains
 
 class SambaException(Exception):
     pass
@@ -188,3 +189,21 @@ def push_vpn_routes():
             },
             extra={"isNotificationHidden": True},
         )
+
+def get_joinaddress():
+    kdomain = os.getenv('DOMAIN', os.environ['REALM'].lower())
+
+    rdb = agent.redis_connect()
+    domains = cluster.userdomains.get_internal_domains(rdb)
+
+    if not kdomain in domains:
+        raise SambaException(f'Realm "{kdomain}" not found')
+
+    for provider in domains[kdomain]['providers']:
+        if provider['id'] != os.environ["MODULE_ID"]:
+            break # DC found. Stop searching.
+    else:
+        # DC not found: error!
+        raise SambaException(f'DC for "{kdomain}" not found')
+
+    return provider['host']

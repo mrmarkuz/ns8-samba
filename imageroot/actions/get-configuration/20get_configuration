@@ -33,9 +33,15 @@ def get_configuration_required():
     return False
 
 def get_ipaddress_alterable():
+    if not os.getenv("REALM"):
+        return True
     if os.getenv("SERVER_ROLE") == "member":
         return True
-    # XXX if print-joinaddress is empty, return True
+    try:
+        # Raise an exception if a DC for REALM does not exist:
+        samba.get_joinaddress()
+    except samba.SambaException:
+        return True # No other DCs found, IP can be changed as wanted.
     return False
 
 def get_realm_lc():
