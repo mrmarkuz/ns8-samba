@@ -148,7 +148,7 @@ if [[ -z "${is_home_dir}" ]]; then
     #
     sddl_acl_file="O:LAG:DUD:AI(A;ID;${perms_full};;;SY)(A;ID;${perms_full};;;BA)${ace_group_file}${ace_everyone_file}"
     sddl_acl_sdir="O:LAG:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;BA)${ace_group_sdir}${ace_everyone_sdir}"
-    sddl_acl_root="O:LAG:DUD:PAI(A;;RC;;;DD)(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_group_root}${ace_everyone_root}"
+    sddl_acl_root="O:LAG:DUD:PAI(A;;RC;;;NU)(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_group_root}${ace_everyone_root}"
 else
     #
     # ACL for home directory
