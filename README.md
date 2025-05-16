@@ -239,6 +239,13 @@ backup set. When the procedure completes, go to the ``Domain and users``
 page and resume the configuration of the DC: it must be joined to the
 domain as a new DC.
 
+The `samba_audit` DB is also included in the backup set, and restored by
+the usual procedure.
+
+## Known log messages
+
+- `warning: there are circular foreign-key constraints on this table` This warning from TimescaleDB backup procedure is harmless. See https://docs.timescale.com/self-hosted/latest/troubleshooting/#errors-encountered-during-a-pg_dump-migration.
+
 ## Migration notes
 
 Migration is implemented in the `import-module` action.

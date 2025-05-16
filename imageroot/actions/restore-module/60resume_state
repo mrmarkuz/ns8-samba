@@ -23,6 +23,25 @@
 exec 1>&2
 set -e
 
+if [[ -f samba_audit.pgdump ]] ; then
+    echo "Restore samba_audit data in TimescaleDB:"
+    du -h samba_audit.pgdump
+    write-timescaledb-config # generate timescaledb.env
+    podman run \
+        --rm \
+        --log-driver=none \
+        --network=none \
+        --interactive \
+        --replace --name=timescaledb --rm \
+        --env=POSTGRES_DB=samba_audit \
+        --env=PGPORT=15432 \
+        --volume=../timescaledb-restoredb.d:/docker-entrypoint-initdb.d:z \
+        --volume=timescaledb:/var/lib/postgresql/data:z \
+        --env-file=timescaledb.env \
+        "${TIMESCALEDB_IMAGE}" < samba_audit.pgdump
+    rm -vf samba_audit.pgdump
+fi
+
 echo "Resume Samba DC state:"
 podman run --hostname="${HOSTNAME}" --interactive --workdir=/var/lib/samba \
     --log-driver=none \

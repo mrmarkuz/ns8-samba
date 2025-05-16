@@ -22,3 +22,6 @@
 
 echo "Cleaning up Samba DC state:"
 podman exec -w /var/lib/samba/ -i samba-dc rm -rvf backup
+
+echo "Cleaning up TimescaleDB dump:"
+rm -vf samba_audit.pgdump
