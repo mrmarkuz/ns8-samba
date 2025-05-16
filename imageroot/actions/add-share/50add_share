@@ -47,3 +47,5 @@ if 'enable_audit' in request:
         request['name'],
         request['enable_audit'],
         request.get('log_failed_events', False))
+
+samba.provision_metrics()

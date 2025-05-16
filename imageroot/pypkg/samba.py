@@ -27,6 +27,8 @@ import sys
 import agent
 import os
 import cluster.userdomains
+import yaml
+import configparser
 
 class SambaException(Exception):
     pass
@@ -222,3 +224,82 @@ def configure_samba_audit(sharename, enable_audit=True, log_failed_events=False)
             set_logfailed_cmd = setparm_cmd + ["full_audit:failure", enabled_failure_operations]
     agent.run_helper(*set_audit_cmd, stderr=subprocess.DEVNULL)
     agent.run_helper(*set_logfailed_cmd, stderr=subprocess.DEVNULL)
+
+def provision_metrics():
+    count_enable_audit = 0
+    # Search for enabled audit shares
+    podman_exec = ["podman", "exec", "samba-dc"]
+    ocfg = configparser.ConfigParser(delimiters=("="))
+    with subprocess.Popen(podman_exec + ["net", "conf", "list"], stdout=subprocess.PIPE, text=True) as hconf:
+        try:
+            ocfg.read_file(hconf.stdout, 'samba-registry-conf')
+        except Exception as ex:
+            print(agent.SD_ERR + "Share configuration parse error", ex, file=sys.stderr)
+
+    psharenames = subprocess.run(podman_exec + ["net", "conf", "listshares"], stdout=subprocess.PIPE, text=True)
+    for share_name in filter(None, psharenames.stdout.split("\n")):
+        if not share_name in ocfg:
+            continue
+        # Calculate audit settings
+        full_audit_success = ocfg[share_name].get("full_audit:success", "none")
+        full_audit_failure = ocfg[share_name].get("full_audit:failure", "none")
+        if full_audit_success != "none" or full_audit_failure != "none":
+            count_enable_audit += 1
+
+    # Set metrics configuration and publish the events
+    module_id = os.environ['MODULE_ID']
+    agent_id = os.environ['AGENT_ID']
+    rdb = agent.redis_connect(privileged=True)
+    trx = rdb.pipeline()
+    if count_enable_audit > 0:
+        tdb = agent.read_envfile("timescaledb.env")
+        # Provision the datasource
+        ds_name = f"SambaAudit {os.environ['HOSTNAME']}"
+        ui_name = rdb.get(f"module/{module_id}/ui_name")
+        if ui_name is not None:
+            ds_name += f" ({ui_name})"
+        else:
+            ds_name += f" ({module_id})"
+        datasource_dict = {
+            "apiVersion": 1,
+            "datasources": [
+                {
+                    "name": ds_name,
+                    "type": "postgres",
+                    "url": f"{os.environ['IPADDRESS']}:15432",
+                    "user": "samba_audit",
+                    "secureJsonData": {
+                        "password": tdb.get("SAMBA_AUDIT_PASSWORD")
+                    },
+                    "jsonData": {
+                        "database": "samba_audit",
+                        "sslmode": "disable",
+                        "maxOpenConns": 100,
+                        "maxIdleConns": 100,
+                        "maxIdleConnsAuto": True,
+                        "connMaxLifetime": 14400,
+                        "postgresVersion": 17000,
+                        "timescaledb": True
+                    }
+                }
+            ]
+        }
+        # Set the datasource in Redis
+        trx.hset(f"module/{module_id}/metrics_datasources", "samba_audit", yaml.dump(datasource_dict))
+
+        # List of dashboard files and their corresponding Redis keys
+        for dashboard_key in ["samba_audit_statistics", "samba_audit_search"]:
+            with open(f"../etc/grafana/{dashboard_key}.json", "r") as f:
+                dashboard_content = f.read()
+            trx.hset(f"module/{module_id}/metrics_dashboards", dashboard_key, dashboard_content)
+    else:
+        print(agent.SD_ERR + "No Samba audit share found, removing datasource and dashboard", file=sys.stderr)
+        # Cleanup the datasource and dashboard
+        trx.hdel(f"module/{module_id}/metrics_datasources", "samba_audit")
+        trx.hdel(f"module/{module_id}/metrics_dashboards", "samba_audit")
+
+    # Always publish the datasource and dashboard change events
+    # to reload the configuration and cleanup removed items
+    trx.publish(f"{agent_id}/event/metrics-datasource-changed", "{}")
+    trx.publish(f"{agent_id}/event/metrics-dashboard-changed", "{}")
+    trx.execute()
