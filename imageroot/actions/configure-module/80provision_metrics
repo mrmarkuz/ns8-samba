@@ -9,12 +9,16 @@ import os
 import yaml
 import agent
 
-rdb = agent.redis_connect(privileged=True)
 module_id = os.environ['MODULE_ID']
 agent_id = os.environ['AGENT_ID']
+node_id = int(os.environ['NODE_ID'])
+rdb_ro = agent.redis_connect()
+# below query must be executed on a non-privileged connection
+ip_address = rdb_ro.hget(f'node/{node_id}/vpn', 'ip_address')
 
-has_file_server_flag = bool(rdb.sismember(f'module/{module_id}/flags', 'file_server'))
+has_file_server_flag = bool(rdb_ro.sismember(f'module/{module_id}/flags', 'file_server'))
 if has_file_server_flag:
+    rdb = agent.redis_connect(privileged=True)
     # Set metrics configuration and publish the events
     trx = rdb.pipeline()
     tdb = agent.read_envfile("timescaledb.env")
@@ -31,7 +35,7 @@ if has_file_server_flag:
             {
                 "name": ds_name,
                 "type": "postgres",
-                "url": f"{os.environ['IPADDRESS']}:15432",
+                "url": f"{ip_address}:15432",
                 "user": "samba_audit",
                 "secureJsonData": {
                     "password": tdb.get("SAMBA_AUDIT_PASSWORD")
