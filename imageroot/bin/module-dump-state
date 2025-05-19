@@ -40,4 +40,3 @@ EOF
 #
 echo "Dumping samba_audit DB from TimescaleDB to disk:"
 podman exec -u postgres timescaledb pg_dump -p 15432 -d samba_audit -Fc -Z 5 > samba_audit.pgdump
-du -h samba_audit.pgdump

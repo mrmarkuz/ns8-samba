@@ -25,7 +25,6 @@ set -e
 
 if [[ -f samba_audit.pgdump ]] ; then
     echo "Restore samba_audit data in TimescaleDB:"
-    du -h samba_audit.pgdump
     write-timescaledb-config # generate timescaledb.env
     podman run \
         --rm \

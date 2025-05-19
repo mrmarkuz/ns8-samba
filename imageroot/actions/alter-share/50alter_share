@@ -9,13 +9,14 @@ import sys
 import json
 import agent
 import samba
+import subprocess
 
 podman_exec = ["podman", "exec", "samba-dc"]
 
 request = json.load(sys.stdin)
 
 # Check if the share already exists
-pcheck = agent.run_helper(*(podman_exec + ["net", "conf", "showshare", request["name"]]))
+pcheck = subprocess.run(podman_exec + ["net", "conf", "showshare", request["name"]], stdout=subprocess.DEVNULL)
 if pcheck.returncode != 0:
     agent.set_status('validation-failed')
     json.dump([{'field':'name', 'parameter':'name','value': request['name'], 'error':'share_not_found'}], fp=sys.stdout)

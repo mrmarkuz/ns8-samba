@@ -179,7 +179,7 @@ the `ipaddress` attribute in the Provision section), it will be
 
 ## Samba Audit
 
-User activity on shared folders is recorded in a TimescaleDB instance.
+User activity on shared folders can be recorded in a TimescaleDB instance.
 
 Access TimescaleDB on port 15432 as user `postgres` (full privileges) or
 `samba_audit` (select-only privileges). Passwords are saved into
