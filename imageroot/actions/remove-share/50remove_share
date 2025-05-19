@@ -8,7 +8,6 @@
 import sys
 import json
 import agent
-import samba
 
 podman_exec = ["podman", "exec", "samba-dc"]
 
@@ -25,5 +24,3 @@ elif phelper.returncode == 2:
     sys.exit(2)
 else:
     phelper.check_returncode()
-
-samba.provision_metrics()
