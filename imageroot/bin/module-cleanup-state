@@ -20,7 +20,7 @@
 # along with NethServer.  If not, see COPYING.
 #
 
-echo "Cleaning up Samba DC state:"
+echo "Cleaning up Samba backup directory:"
 podman exec -w /var/lib/samba/ -i samba-dc rm -rvf backup
 
 echo "Cleaning up TimescaleDB dump:"
