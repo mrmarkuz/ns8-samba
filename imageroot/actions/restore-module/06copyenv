@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+#!/usr/bin/env python3
+
 #
 # Copyright (C) 2022 Nethesis S.r.l.
 # http://www.nethesis.it - nethserver@nethesis.it
@@ -25,54 +27,124 @@ import json
 import agent
 import os
 import samba
+import cluster.userdomains
+import ipaddress
 
-request = json.load(sys.stdin)
+agent.set_weight(os.path.basename(__file__), 0) # Validation step, no task progress at all
 
-original_environment = request['environment']
+def main():
+    ipaddr = ""
+    request = json.load(sys.stdin)
+    original_environment = request['environment']
+    server_role = original_environment.get("SERVER_ROLE", "dc")
+    ipaddr = original_environment['IPADDRESS']
+    has_valid_ip = validate_ipaddress(ipaddr)
+    if server_role == 'member':
+        assign_ipaddress_for_member(original_environment, has_valid_ip)
+        if has_ad_user_domain(original_environment, check_also_external_domains=True):
+            agent.set_env("REALM", original_environment["REALM"])
+            agent.set_env("DOMAIN", original_environment.get("DOMAIN", original_environment["REALM"].lower()))
+    elif server_role == 'dc':
+        assign_ipaddress_for_dc(original_environment, has_valid_ip)
+        agent.set_env("REALM", original_environment["REALM"])
+        agent.set_env("DOMAIN", original_environment.get("DOMAIN", original_environment["REALM"].lower()))
+    set_hostnames(original_environment) # set_env HOSTNAME, NBALIAS
+    agent.set_env("NBDOMAIN", original_environment["NBDOMAIN"])
+    agent.set_env("SERVER_ROLE", server_role)
+    agent.set_env("PROVISION_TYPE", original_environment.get("PROVISION_TYPE", "new-domain"))
+    agent.set_env("SVCUSER", original_environment["SVCUSER"])
+    agent.set_env("SVCPASS", original_environment["SVCPASS"])
 
-for evar in [
-        'NBDOMAIN',
-        'REALM',
-        'SVCUSER',
-        'SVCPASS',
-    ]:
-    agent.set_env(evar, original_environment[evar])
+def validate_ipaddress(ipaddr):
+    try:
+        samba.ipaddress_check(ipaddr)
+    except samba.IpNotPrivate:
+        agent.set_status('validation-failed')
+        json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ipaddr,"error":"ipaddress_private_check_failed"}], fp=sys.stdout)
+        sys.exit(2)
+    except samba.IpBindError as ex:
+        print(ex, file=sys.stderr)
+        agent.set_status('validation-failed')
+        json.dump([{"field":"ipaddress","parameter":"ipaddress","value": ex.ipaddr,"error":"ipaddress_bind_check_failed"}], fp=sys.stdout)
+        sys.exit(4)
+    except samba.IpNotAvailable:
+        print(agent.SD_NOTICE + f"IP address {ipaddr} not found.", file=sys.stderr)
+        return False
+    return True
 
-# The "samba-tool domain backup restore" procedure expects a new DC hostname,
-# a new one must be provided, now!
+def assign_ipaddress_for_member(original_environment, has_valid_ip):
+    """Assing the original IP address."""
+    module_id = os.environ["MODULE_ID"]
+    if has_valid_ip:
+        agent.set_env('IPADDRESS', original_environment['IPADDRESS'])
+        with agent.redis_connect(privileged=True) as prdb:
+            prdb.sadd(f"module/{module_id}/flags", "file_server")
+    else:
+        agent.set_env('IPADDRESS', '')
+
+def assign_ipaddress_for_dc(original_environment, has_valid_ip):
+    """Conditionally assign the original IP address or the node VPN IP address."""
+    module_id = os.environ["MODULE_ID"]
+    rdbw = agent.redis_connect(privileged=True)
+    rdbw.sadd(f"module/{module_id}/flags", "core_module", "account_provider")
+    rdbw.set(f"module/{module_id}/user_domain", original_environment['REALM'].lower())
+    if has_ad_user_domain(original_environment, check_also_external_domains=False):
+        agent.set_env('IPADDRESS', '') # Manual config
+    elif has_valid_ip:
+        # Start the DC with original IP address:
+        agent.set_env('IPADDRESS', original_environment['IPADDRESS'])
+        rdbw.sadd(f"module/{module_id}/flags", "file_server")
+    else:
+        with agent.redis_connect(use_replica=True) as rdb:
+            cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
+            vpn_ipaddress = rdb.hget(f"node/{os.environ['NODE_ID']}/vpn", "ip_address")
+        # Use the node VPN IP address to start the DC:
+        agent.set_env('PREFIXLEN', str(cluster_network.prefixlen))
+        agent.set_env('IPADDRESS', vpn_ipaddress)
+
+def has_ad_user_domain(original_environment, check_also_external_domains=False):
+    """Check if an AD user domain already exists in the cluster."""
+    kdomain = original_environment.get("DOMAIN", original_environment['REALM'].lower())
+    rdb = agent.redis_connect(use_replica=True)
+    external_domains = cluster.userdomains.get_external_domains(rdb)
+    internal_domains = cluster.userdomains.get_internal_domains(rdb)
+    if kdomain in internal_domains and internal_domains[kdomain]['schema'] == 'ad':
+        return True
+    elif check_also_external_domains and kdomain in external_domains and external_domains[kdomain]['schema'] == 'ad':
+        return True
+    elif kdomain not in internal_domains and kdomain not in external_domains:
+        return False
+    else:
+        # Fatal error. Samba restore is impossible with schema RFC2307.
+        agent.set_status('validation-failed')
+        json.dump([{'field':'DOMAIN', 'parameter':'DOMAIN','value': kdomain, 'error':'invalid_domain_schema'}], fp=sys.stdout)
+        sys.exit(5)
+
+def set_hostnames(original_environment):
+    if original_environment.get("SERVER_ROLE") == "member":
+        agent.set_env("HOSTNAME", original_environment["HOSTNAME"])
+        agent.set_env("NBALIAS", original_environment.get("NBALIAS", ""))
+    else:
+        shortname, _ = original_environment['HOSTNAME'].split('.', 1) # short hostname
+        agent.set_env('HOSTNAME', generate_new_dc_name(shortname) + '.' + original_environment['REALM'].lower())
+        agent.set_env("NBALIAS", "")
+
 def generate_new_dc_name(name):
+    # The "samba-tool domain backup restore" procedure expects a new DC hostname,
+    # a new one must be provided, now!
     """Append a suffix rN to the host name. If such suffix is already
     present, replace it with r(N+1)"""
-
     try:
         prefix, suffix = name.rsplit("r", 1)
     except ValueError:
         prefix = name
         suffix = '0'
-
     try:
         suffix = str(int(suffix) + 1)
     except ValueError:
         suffix = suffix + 'r1'
-
     newname = prefix + 'r' + suffix
-
     return newname
 
-hname, _ = original_environment['HOSTNAME'].split('.', 1) # short hostname
-agent.set_env('HOSTNAME', generate_new_dc_name(hname) + '.' + original_environment['REALM'].lower())
-
-#
-# If IPADDRESS is not on this system, replace it with the VPN IP address:
-#
-ipaddress = original_environment['IPADDRESS']
-node_id = os.environ["NODE_ID"]
-try:
-    samba.ipaddress_check(ipaddress)
-except samba.IpNotAvailable:
-    with agent.redis_connect(use_replica=True) as rdb:
-        ipaddress = rdb.hget(f"node/{node_id}/vpn", "ip_address")
-    if not ipaddress:
-        raise
-
-agent.set_env('IPADDRESS', ipaddress)
+if __name__ == "__main__":
+    main()

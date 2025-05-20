@@ -1,30 +1,9 @@
-#!/usr/bin/env python3
+#!/bin/bash
 
 #
-# Copyright (C) 2023 Nethesis S.r.l.
+# Copyright (C) 2025 Nethesis S.r.l.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-import agent
-import json
-import sys
-import os
-import ipaddress
-
-request = json.load(sys.stdin)
-
-with agent.redis_connect() as rdb:
-    cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
-
-samba_ipaddress = os.environ['IPADDRESS']
-module_id = os.environ['MODULE_ID']
-
-if ipaddress.ip_address(samba_ipaddress) in cluster_network:
-    agent.set_env('PREFIXLEN', str(cluster_network.prefixlen))
-else:
-    agent.unset_env('PREFIXLEN')
-    # The instance is bound to a local network IP address: mark it with
-    # the "file_server" flag, to enforce our business rules about Samba
-    # DCs and file server instances.
-    with agent.redis_connect(privileged=True) as prdb:
-        prdb.sadd(f"module/{module_id}/flags", "file_server")
+# Non-executable placeholder, see bug NethServer/dev#7058
+exit 0

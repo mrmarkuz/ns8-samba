@@ -14,6 +14,9 @@ import sys
 import os
 import json
 
+if not os.getenv('REALM'): # may be missing in member restore
+    sys.exit(0)
+
 rdb = agent.redis_connect()
 module_id = os.environ["MODULE_ID"]
 has_file_server_flag = bool(rdb.sismember(f'module/{module_id}/flags', 'file_server'))
