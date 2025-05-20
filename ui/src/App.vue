@@ -8,6 +8,10 @@
       <AppSideMenu />
       <AppMobileSideMenu />
       <router-view />
+      <FirstConfigurationModal
+        :isShown="configuration && configuration.configuration_required"
+        @configured="getConfiguration"
+      />
     </cv-content>
   </div>
 </template>
@@ -22,13 +26,14 @@ import {
   UtilService,
 } from "@nethserver/ns8-ui-lib";
 import to from "await-to-js";
+import FirstConfigurationModal from "./components/FirstConfigurationModal.vue";
 
 export default {
   name: "App",
-  components: { AppSideMenu, AppMobileSideMenu },
+  components: { AppSideMenu, AppMobileSideMenu, FirstConfigurationModal },
   mixins: [QueryParamService, TaskService, UtilService],
   computed: {
-    ...mapState(["instanceName", "instanceLabel", "core"]),
+    ...mapState(["instanceName", "instanceLabel", "core", "configuration"]),
   },
   created() {
     const core = window.parent.core;
@@ -69,6 +74,7 @@ export default {
       "setCoreInStore",
       "setAppNameInStore",
       "setConfigurationInStore",
+      "setAppConfiguredInStore",
     ]),
     async getInstanceLabel() {
       const taskAction = "get-name";
@@ -147,7 +153,10 @@ export default {
       const err = res[0];
 
       if (err) {
-        console.error(`error creating task ${taskAction}`, err);
+        this.createErrorNotificationForApp(
+          `error creating task ${taskAction}`,
+          this.$t("task.cannot_create_task", { action: taskAction })
+        );
         return;
       }
     },
@@ -156,10 +165,6 @@ export default {
     },
     getConfigurationCompleted(taskContext, taskResult) {
       const config = taskResult.output;
-
-      // TODO remove
-      console.log("config", config);
-
       this.setConfigurationInStore(config);
     },
   },

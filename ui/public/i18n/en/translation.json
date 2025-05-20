@@ -7,7 +7,9 @@
         "close": "Close",
         "cancel": "Cancel",
         "next": "Next",
-        "previous": "Previous"
+        "previous": "Previous",
+        "loading": "Loading",
+        "optional": "optional"
     },
     "software_center": {
         "source_package": "App image"
@@ -28,10 +30,10 @@
         "no_images": "No images",
         "no_volumes": "No volumes",
         "general": "General",
-        "domain": "Domain",
         "go_to_domains_and_users": "Go to Domains and users",
         "shared_folders": "Shared folders",
-        "go_to_shared_folders": "Go to Shared folders"
+        "go_to_shared_folders": "Go to Shared folders",
+        "go_to_settings": "Go to Settings"
     },
     "shares": {
         "title": "Shared folders",
@@ -54,6 +56,10 @@
         "acl_rw": "Read and write",
         "acl_full": "Full access",
         "acl_special": "Special",
+        "acl_short_ro": "RO",
+        "acl_short_rw": "RW",
+        "acl_short_full": "Full access",
+        "acl_short_special": "Special",
         "delete_shared_folder_name": "Delete shared folder {name}",
         "delete_shared_folder_description": "Delete shared folder '{name}'? All files contained will be permanently deleted.",
         "share_not_found": "Share not found",
@@ -84,7 +90,48 @@
         "no_snapshot_to_restore": "No snapshot to restore",
         "search_file_or_folder": "Search file or folder",
         "restore_file_info": "The selected file or folder will be restored to '{restoredFolder}'. Ensure there is sufficient space on {node} to avoid restore failure.",
-        "restoring_to_share_name": "Restoring to share '{name}'"
+        "restoring_to_share_name": "Restoring to share '{name}'",
+        "how_to_access_shared_folders": "How to access shared folders",
+        "how_to_access_shared_folders_description": "Help users connect to shared folders with the correct path and login format.",
+        "network_path_examples": "Network path example | Network path examples",
+        "username_format_examples": "Username format examples",
+        "column_name": "Folder name",
+        "column_description": "Description",
+        "search_folder": "Search folder"
+    },
+    "settings": {
+        "title": "Settings",
+        "configure_instance": "Configure {instance}",
+        "domain": "Domain",
+        "ad_admin_username": "AD admin username",
+        "ad_admin_password": "AD admin password",
+        "file_server_name": "File server name",
+        "file_server_name_tooltip": "Unique name for the Active Directory computer account. It will appear in DNS and cannot be changed.",
+        "file_server_alias": "File server alias",
+        "file_server_alias_tooltip": "Alternative name for the computer, used in network paths to access shared folders. It must be unique in the AD network. Can be up to 15 characters long.",
+        "file_server_ip_address": "File server IP address",
+        "save_settings": "Save settings",
+        "file_server_ip_address_tooltip": "IP address to associate with the file server in the Active Directory domain. This cannot be changed if Samba is also a domain provider and other domain providers exist in the same domain.",
+        "credentials_required_description": "Saving changes requires the credentials of a user in the 'Domain Admins' group.",
+        "invalid_credentials_description": "Authentication failed. Credentials for a user in the 'Domain Admins' group are required.",
+        "netbios_domain_name": "NetBIOS domain name",
+        "not_set": "(not set)"
+
+    },
+    "welcome": {
+        "title": "Welcome to Samba",
+        "step_domain_description": "Select the Active Directory domain you want to join as a member.",
+        "no_domain_configured": "No Active Directory domain configured",
+        "no_domain_configured_description": "Please configure an Active Directory domain first",
+        "go_to_domains_and_users": "Go to Domains and users",
+        "choose_domain": "Choose domain",
+        "step_credentials_description": "Enter the credentials of a user in the 'Domain Admins' group.",
+        "step_settings_description": "Configure the file server identity within the Active Directory domain.",
+        "choose_ip_address": "Choose IP address",
+        "file_server_name_tooltip": "Unique name for the Active Directory computer account, can be up to 15 characters long. It will appear in DNS and cannot be changed later.",
+        "file_server_alias_tooltip": "Alternative name for the computer, used in network paths to access shared folders. It must be unique in the AD network and can be changed later. Can be up to 15 characters long.",
+        "file_server_ip_address_tooltip": "IP address to associate with the file server in the Active Directory domain. This cannot be changed later if Samba is also a domain provider and other domain providers exist in the same domain.",
+        "create_file_server": "Create file server"
     },
     "about": {
         "title": "About"
@@ -109,7 +156,9 @@
         "reset-share-acls": "Set shared folder permissions",
         "restore-backup-content": "Restore file or folder",
         "seek-snapshot-contents": "Search matching files",
-        "read-backup-snapshots": "Read backup snapshots"
+        "read-backup-snapshots": "Read backup snapshots",
+        "list-user-domains": "List user domains",
+        "set-configuration": "Set configuration"
     },
     "error": {
         "error": "Error",
@@ -121,7 +170,19 @@
         "403": "Operation not authorized",
         "404": "Resource not found",
         "cannot_retrieve_module_info": "Cannot retrieve module info",
-        "cannot_retrieve_installed_modules": "Cannot retrieve installed modules"
+        "cannot_retrieve_installed_modules": "Cannot retrieve installed modules",
+        "ipaddress_format": "Invalid IP address",
+        "ipaddress_private_check_failed": "IP address must be private",
+        "ipaddress_avail_check_failed": "IP address not available",
+        "ipaddress_bind_check_failed": "IP address already in use",
+        "invalid_credentials": "Invalid credentials",
+        "incorrect_username_or_password": "Incorrect username or password",
+        "insufficient_permissions": "Insufficient permissions",
+        "hostname_check_failed": "File server name already in use",
+        "hostname_pattern": "Only alphanumeric characters and hyphens are allowed",
+        "hostname_string_lte": "Must be less than or equal to 15 characters",
+        "nbalias_pattern": "Only alphanumeric characters and hyphens are allowed",
+        "nbalias_conflict": "File server alias already in use"
     },
     "ns_combo_search_box": {
         "placeholder": "Search",
