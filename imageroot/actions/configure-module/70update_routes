@@ -14,5 +14,5 @@ import samba
 # Symlinked by restore-module/70update_routes_symlink
 #
 
-if os.getenv("SERVER_ROLE") != "member":
+if os.getenv("IPADDRESS") and os.getenv("SERVER_ROLE") != "member":
     samba.push_vpn_routes()

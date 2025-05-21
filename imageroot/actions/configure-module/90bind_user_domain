@@ -14,7 +14,7 @@ import sys
 import os
 import json
 
-if not os.getenv('REALM'): # may be missing in member restore
+if not os.getenv("IPADDRESS") or not os.getenv('REALM'):
     sys.exit(0)
 
 rdb = agent.redis_connect()
