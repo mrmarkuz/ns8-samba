@@ -230,3 +230,9 @@ def configure_recycle(sharename, enable_recycle=True, recycle_retention=0):
     else:
         agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "delparm", sharename, "recycle:repository")
         agent.run_helper("podman", "exec", "samba-dc", "recycle", "del_retention", sharename)
+
+def configure_browseable(sharename, browseable=True):
+    if browseable:
+        agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "delparm", sharename, "browseable")
+    else:
+        agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "setparm", sharename, "browseable", "no")

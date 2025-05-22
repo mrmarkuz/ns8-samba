@@ -53,3 +53,8 @@ if 'enable_recycle' in request:
         request['name'],
         request['enable_recycle'],
         request.get('recycle_retention', 0))
+
+if 'browseable' in request:
+    samba.configure_browseable(
+        request['name'],
+        request['browseable'])

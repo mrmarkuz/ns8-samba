@@ -83,6 +83,10 @@
                     "title": "Share description",
                     "description": "Free text, known also as \"comment\""
                 },
+                "browseable": {
+                    "type": "boolean",
+                    "description": "If true the share is browseable to users, and is listed as a server resource. If false users must know its name to connect with it because it is not included in the network share list."
+                },
                 "enable_recycle": {
                     "type": "boolean",
                     "description": "Enable the Recycle Bin for this network share."

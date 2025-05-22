@@ -8,10 +8,12 @@
             "name": "myshare002",
             "description": "With Samba Audit",
             "enable_audit": true,
+            "browseable": false,
             "log_failed_events": false
         },
         {
             "name": "myshare001",
+            "browseable": true,
             "description": "First share"
         },
         {
@@ -32,6 +34,11 @@
         "name"
     ],
     "properties": {
+        "browseable": {
+            "type": "boolean",
+            "default": true,
+            "description": "If true the share is browseable to users, and is listed as a server resource. If false users must know its name to connect with it because it is not included in the network share list."
+        },
         "enable_recycle": {
             "type": "boolean",
             "description": "Enable the Recycle Bin for this network share."
