@@ -8,6 +8,7 @@
 import sys
 import json
 import agent
+import samba
 
 podman_exec = ["podman", "exec", "samba-dc"]
 
@@ -24,3 +25,5 @@ elif phelper.returncode == 2:
     sys.exit(2)
 else:
     phelper.check_returncode()
+
+samba.configure_recycle(request['name'], enable_recycle=False) # Clean-up retention registry key

@@ -47,3 +47,9 @@ if 'enable_audit' in request:
         request['name'],
         request['enable_audit'],
         request.get('log_failed_events', False))
+
+if 'enable_recycle' in request:
+    samba.configure_recycle(
+        request['name'],
+        request['enable_recycle'],
+        request.get('recycle_retention', 0))

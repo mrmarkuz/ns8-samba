@@ -54,6 +54,8 @@ def main():
     agent.set_env("PROVISION_TYPE", original_environment.get("PROVISION_TYPE", "new-domain"))
     agent.set_env("SVCUSER", original_environment["SVCUSER"])
     agent.set_env("SVCPASS", original_environment["SVCPASS"])
+    if 'RECYCLE_REPOSITORY' in original_environment:
+        agent.set_env("RECYCLE_REPOSITORY", original_environment["RECYCLE_REPOSITORY"])
 
 def validate_ipaddress(ipaddr):
     try:

@@ -22,6 +22,7 @@ function domain_controller_role ()
 
     samba -F --debug-stdout "${extra_args[@]}" &
     chronyd -d -x &
+    recycle run_daemon &
     wsdd -i "${IPADDRESS}" -d "${NBDOMAIN}" &
     syslog-ng -F --no-caps &
     wait -n
@@ -30,6 +31,7 @@ function domain_controller_role ()
 
 function member_server_role ()
 {
+    recycle run_daemon &
     wsdd -i "${IPADDRESS}" -d "${NBDOMAIN}" &
     smbd -F --debug-stdout &
     winbindd -F --debug-stdout &

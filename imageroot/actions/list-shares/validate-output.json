@@ -10,6 +10,8 @@
                     "name": "myshare001",
                     "enable_audit": false,
                     "log_failed_events": false,
+                    "enable_recycle": false,
+                    "recycle_retention": 30,
                     "description": "First share",
                     "acls": [
                         {
@@ -34,6 +36,8 @@
                     "name": "myshare002",
                     "enable_audit": true,
                     "log_failed_events": false,
+                    "enable_recycle": true,
+                    "recycle_retention": 7,
                     "description": "Second share",
                     "acls": [
                         {
@@ -78,6 +82,15 @@
                     "type": "string",
                     "title": "Share description",
                     "description": "Free text, known also as \"comment\""
+                },
+                "enable_recycle": {
+                    "type": "boolean",
+                    "description": "Enable the Recycle Bin for this network share."
+                },
+                "recycle_retention": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Number of days deleted files are retained in the Recycle Bin before permanent removal. 0 = Infinite"
                 },
                 "enable_audit": {
                     "type": "boolean",

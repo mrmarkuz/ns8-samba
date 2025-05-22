@@ -66,12 +66,15 @@ cat - >/etc/samba/smb.conf <<EOF
         full_audit:priority = INFO
         full_audit:success = none
         full_audit:failure = none
+        recycle:repository =
+        recycle:keeptree = yes
+        recycle:versions = yes
 
 EOF
 
 if [[ "${SERVER_ROLE}" == "member" ]] ; then
 cat - >>/etc/samba/smb.conf <<ROLEMEMBER
-        vfs objects = acl_xattr full_audit
+        vfs objects = acl_xattr recycle full_audit
         winbind use default domain = yes
         idmap config * : backend = tdb
         idmap config * : range = 1001-1999
@@ -86,7 +89,7 @@ cat - >>/etc/samba/smb.conf <<ROLEMEMBER
 ROLEMEMBER
 else
 cat - >>/etc/samba/smb.conf <<ROLEDC
-        vfs objects = dfs_samba4 acl_xattr full_audit
+        vfs objects = dfs_samba4 acl_xattr recycle full_audit
         server role = active directory domain controller
         include = /etc/samba/include.conf
 

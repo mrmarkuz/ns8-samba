@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2025 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import subprocess
+import json
+import sys
+import time
+import os
+from pathlib import Path
+import argparse
+import configparser
+from datetime import datetime, timedelta
+
+REGISTRY_KEY = r"HKLM\Software\NethServer\recycle_retention"
+RECYCLE_BASE = Path("/srv/shares")
+
+def get_retention_map():
+    retention_map = {}
+    def parse_line(l):
+        return l.split("=", 1)[1].strip().strip('"')
+    with subprocess.Popen(["net", "registry", "enumerate", REGISTRY_KEY],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=sys.stderr) as proc:
+        while True:
+            # Consume 4 lines of output for each iteration
+            key_line = proc.stdout.readline()    # e.g. `Valuename  = myshare1`
+            _ = proc.stdout.readline()           # e.g. `Type       = REG_SZ`
+            value_line = proc.stdout.readline()  # e.g. `Value      = "29"`
+            if not proc.stdout.readline():       # empty line, record separator
+                break # EOF
+            retention_map[parse_line(key_line)] = int(parse_line(value_line))
+    return retention_map
+
+def dump_retention():
+    json.dump(get_retention_map(), fp=sys.stdout)
+    print()
+
+def set_retention(share_name, num_days):
+    subprocess.run(
+        ["net", "registry", "setvalue", REGISTRY_KEY, share_name, "sz", str(num_days)],
+        check=True
+    )
+
+def del_retention(share_name):
+    if share_name in get_retention_map():
+        subprocess.run(
+            ["net", "registry", "deletevalue", REGISTRY_KEY, share_name],
+        )
+
+def remove_old_files(path: Path, days: int):
+    if not path.is_dir():
+        return
+    print(f"recycle: Removing contents older than {days} days from {path}.")
+    # Retention is based on filesystem change time (ctime), as per official policy.
+    # This approximates the deletion time, since Samba moves files into {path}.
+    subprocess.run(["find", str(path), "-mindepth", "1", "-ctime", f"+{days}", "-delete"])
+
+def get_recycle_repository(share_name):
+    try:
+        repodir = subprocess.check_output(
+            ["net", "conf", "getparm", share_name, "recycle:repository"],
+            text=True,
+            stderr=subprocess.DEVNULL).strip()
+    except subprocess.CalledProcessError as e:
+        repodir = '' # recycle is disabled
+    return repodir
+
+def run_daemon():
+    while True:
+        time.sleep(6400)
+        purge_shares()
+        time.sleep(80000)
+
+def purge_shares():
+    try:
+        for share, days in get_retention_map().items():
+            if days <= 0:
+                continue
+            repository = get_recycle_repository(share)
+            if repository:
+                recycle_path = RECYCLE_BASE / share / repository
+                remove_old_files(recycle_path, days)
+    except subprocess.CalledProcessError as e:
+        print(f"Registry access error: {e.stderr}", file=sys.stderr)
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+
+def main():
+    parser = argparse.ArgumentParser(description="Recycle retention manager")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers.add_parser("dump_retention", help="Dump registry retention values as JSON")
+    set_parser = subparsers.add_parser("set_retention", help="Set retention days for a share")
+    set_parser.add_argument("share_name", help="Share name")
+    set_parser.add_argument("num_days", type=int, help="Retention in days (0 means keep forever)")
+    del_parser = subparsers.add_parser("del_retention", help="Delete retention for a share")
+    del_parser.add_argument("share_name", help="Share name")
+    subparsers.add_parser("run_daemon", help="Run the daily cleanup loop continuosly")
+    subparsers.add_parser("purge_shares", help="Run cleanup procedure immediately")
+    args = parser.parse_args()
+    if args.command == "dump_retention":
+        dump_retention()
+    elif args.command == "set_retention":
+        set_retention(args.share_name, args.num_days)
+    elif args.command == "del_retention":
+        del_retention(args.share_name)
+    elif args.command == "run_daemon":
+        run_daemon()
+    elif args.command == "purge_shares":
+        purge_shares()
+
+if __name__ == "__main__":
+    main()

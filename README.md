@@ -242,6 +242,31 @@ domain as a new DC.
 The `samba_audit` DB is also included in the backup set, and restored by
 the usual procedure.
 
+## Recycle bin
+
+A shared folder can be configured to retain deleted files for a specified
+number of days, or indefinitely. For example, the following command
+enables the recycle function and sets a retention period of 12 days for
+files deleted from *myshare2*:
+
+    api-cli run module/samba3/alter-share --data '{"name":"myshare2","enable_recycle":true,"recycle_retention":12}'
+
+Each day, the automatic `recycle run_daemon` procedure in the `samba-dc`
+container scans for files and directories whose filesystem change time
+exceeds the configured retention period and removes them. If a retention
+value of `0` is set, the automatic cleanup procedure is disabled.
+
+When the recycle bin is enabled, the Samba share parameter
+`recycle:repository = .recycle` is set in the share registry
+configuration. Review the current share configuration with:
+
+    podman exec samba-dc net conf list
+
+The default repository value `.recycle` assigned to enable the recycle bin
+can be adjusted by executing a command like this:
+
+    python3 -magent -c 'agent.set_env("RECYCLE_REPOSITORY", ".myrecycle")'
+
 ## Known log messages
 
 - `warning: there are circular foreign-key constraints on this table` This warning from TimescaleDB backup procedure is harmless. See https://docs.timescale.com/self-hosted/latest/troubleshooting/#errors-encountered-during-a-pg_dump-migration.

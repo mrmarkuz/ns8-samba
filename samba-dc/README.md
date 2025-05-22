@@ -202,6 +202,19 @@ This command checks if the local DC is assigned some FSMO role. Run this
 check before decommissioning the DC. Exit-code `2` means some FSMO role is
 assigned to the DC.
 
+### `recycle`
+
+This script manages the retention policy of deleted files stored in Samba
+recycle bins. It supports three subcommands:
+
+* **`dump_retention`**: Displays current retention settings from the
+  registry in JSON format.
+* **`set_retention <share> <days>`**: Sets the number of days to retain
+  deleted files for a given share.
+* **`run_daemon`**: Runs an endless loop that, once per day, deletes files
+  from the Recycle bin repository folder of each share whose **change time
+  (`ctime`)** exceeds the configured retention period.
+
 ## Known startup log messages
 
 At startup, some messages may appear in the log. They might look like

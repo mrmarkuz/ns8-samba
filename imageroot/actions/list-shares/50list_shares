@@ -10,6 +10,7 @@ import sys
 import json
 import subprocess
 import configparser
+import agent
 
 podman_exec = ["podman", "exec", "samba-dc"]
 
@@ -76,6 +77,13 @@ with subprocess.Popen(podman_exec + ["net", "conf", "list"], stdout=subprocess.P
     except Exception as ex:
         print(agent.SD_ERR + "Share configuration parse error", ex, file=sys.stderr)
 
+with subprocess.Popen(podman_exec + ["recycle", "dump_retention"], stdout=subprocess.PIPE) as hretention:
+    try:
+        recycle_retentions = json.load(hretention.stdout)
+    except Exception as ex:
+        print(agent.SD_ERR + "Share retention parse error", ex, file=sys.stderr)
+        recycle_retentions = {}
+
 psharenames = subprocess.run(podman_exec + ["net", "conf", "listshares"], stdout=subprocess.PIPE, text=True)
 for share_name in filter(None, psharenames.stdout.split("\n")):
     if not share_name in ocfg:
@@ -86,12 +94,17 @@ for share_name in filter(None, psharenames.stdout.split("\n")):
     full_audit_failure = ocfg[share_name].get("full_audit:failure", "none")
     enable_audit = full_audit_success != "none" or full_audit_failure != "none"
     log_failed_events = enable_audit and full_audit_failure != "none"
+    # Calculate recycle settings
+    enable_recycle = ocfg[share_name].get("recycle:repository", "") != ""
+    recycle_retention = recycle_retentions.get(share_name, 0)
 
     list_shares['shares'].append({
         "name": share_name,
         "description": ocfg[share_name].get("comment", ""),
         "enable_audit": enable_audit,
         "log_failed_events": log_failed_events,
+        "enable_recycle": enable_recycle,
+        "recycle_retention": recycle_retention,
         "acls": read_acls(share_name),
     })
 
