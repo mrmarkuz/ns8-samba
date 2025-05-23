@@ -118,6 +118,9 @@ def handle_script_returncode(proc, adminuser, new_nbalias):
 def set_ipaddress(request):
     if os.getenv('IPADDRESS') == request['ipaddress']:
         return False
+    # Ensure file_server flag is present because we are binding a LAN IP address:
+    with agent.redis_connect(privileged=True) as prdb:
+        prdb.sadd(f"module/{os.environ['MODULE_ID']}/flags", "file_server")
     new_ipaddress = request['ipaddress']
     old_ipaddress = os.getenv('IPADDRESS', '')
     realm = os.environ['REALM'].lower()
