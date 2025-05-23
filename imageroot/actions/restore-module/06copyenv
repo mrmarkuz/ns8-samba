@@ -82,7 +82,7 @@ def assign_ipaddress_for_member(original_environment, has_valid_ip):
         with agent.redis_connect(privileged=True) as prdb:
             prdb.sadd(f"module/{module_id}/flags", "file_server")
     else:
-        agent.set_env('IPADDRESS', '')
+        agent.unset_env('IPADDRESS') # Manual config
 
 def assign_ipaddress_for_dc(original_environment, has_valid_ip):
     """Conditionally assign the original IP address or the node VPN IP address."""
@@ -91,7 +91,7 @@ def assign_ipaddress_for_dc(original_environment, has_valid_ip):
     rdbw.sadd(f"module/{module_id}/flags", "core_module", "account_provider")
     rdbw.set(f"module/{module_id}/user_domain", original_environment['REALM'].lower())
     if has_ad_user_domain(original_environment, check_also_external_domains=False):
-        agent.set_env('IPADDRESS', '') # Manual config
+        agent.unset_env('IPADDRESS') # Manual config
     elif has_valid_ip:
         # Start the DC with original IP address:
         agent.set_env('IPADDRESS', original_environment['IPADDRESS'])
