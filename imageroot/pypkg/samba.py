@@ -134,11 +134,13 @@ def validate_hostname(hostname, realm, nameservers=[]):
         print("DNS nameserver", resolve_ret.nameserver, file=sys.stderr)
         print("DNS authority", resolve_ret.response.authority, file=sys.stderr)
         print("Domain", resolve_ret.rrset.to_text(), file=sys.stderr)
-    except dns.resolver.NoAnswer:
+    except dns.resolver.NoAnswer as ex:
+        print("DNS error:", ex, file=sys.stderr)
         json.dump([{"field": "realm", "parameter": "realm", "value": realm, "error": "realm_dc_avail_check_failed"}], fp=sys.stdout)
         agent.set_status('validation-failed')
         sys.exit(6)
-    except dns.exception.Timeout:
+    except dns.exception.Timeout as ex:
+        print("DNS error:", ex, file=sys.stderr)
         json.dump([{"field": "realm", "parameter": "realm", "value": realm, "error": "realm_dc_reachable_check_failed"}], fp=sys.stdout)
         agent.set_status('validation-failed')
         sys.exit(7)
