@@ -53,7 +53,6 @@ data={
 
 # Advertise this new account provider service instance:
 rdb = agent.redis_connect(privileged=True)
-rdb.sadd(agent_id + '/flags', 'core_module', 'account_provider')
 trx = rdb.pipeline()
 trx.hset(agent_id + '/srv/tcp/ldap', mapping=data)
 trx.publish(agent_id + '/event/service-ldap-changed', json.dumps({
