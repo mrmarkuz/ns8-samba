@@ -145,6 +145,9 @@ def generate_new_dc_name(name):
         suffix = str(int(suffix) + 1)
     except ValueError:
         suffix = suffix + 'r1'
+    # ensure newname length is within 15 chars limit by trimming the
+    # prefix:
+    prefix = prefix[:(15 - len('r' + suffix))]
     newname = prefix + 'r' + suffix
     return newname
 
