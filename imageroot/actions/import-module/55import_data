@@ -8,11 +8,6 @@
 exec 1>&2
 set -e
 
-export NBALIAS=
-if [[ -f nbalias.txt ]]; then
-    NBALIAS="$(< nbalias.txt)"
-fi
-
 exec podman run --rm \
     --interactive \
     --name="${MODULE_ID}-import_data_$$" \
@@ -25,7 +20,6 @@ exec podman run --rm \
     --env=PREFIXLEN \
     --env=NBDOMAIN \
     --env=SAMBA_LOGLEVEL \
-    --env=NBALIAS \
     --volume=data:/var/lib/samba:z \
     --volume=config:/etc/samba:z \
     --volume=shares:/srv/shares:z \
@@ -33,11 +27,6 @@ exec podman run --rm \
     "${SAMBA_DC_IMAGE:?}" bash -s <<'EOF'
 # Errors are fatal
 set -e
-
-# If file server migration is enabled, define a NetBIOS alias name for it
-if [[ -n "${NBALIAS}" ]]; then
-    printf "[global]\n    netbios aliases = %s\n\n" "${NBALIAS}" >> /etc/samba/include.conf
-fi
 
 # Rename exported DBs
 find /var/lib/samba -name '*.export' -exec sh -c 'mv -vf ${1} ${1%.export}' -- {} \;
