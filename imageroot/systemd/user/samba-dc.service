@@ -11,6 +11,7 @@ EnvironmentFile=/etc/nethserver/agent.env
 EnvironmentFile=%S/state/environment
 Restart=always
 TimeoutStopSec=70
+ExecCondition=bash -c '[[ -n "$$IPADDRESS" ]]'
 # samba exits with 143 on SIGTERM:
 SuccessExitStatus=143
 ExecStartPre=/bin/rm -f %t/%N.pid %t/%N.cid

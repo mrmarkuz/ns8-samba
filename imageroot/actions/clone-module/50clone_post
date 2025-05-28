@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2025 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import agent
+
+# Prevent Samba from starting automatically. Manual configuration is
+# required after cloning an AD member instance. Use the Settings page to
+# configure and start Samba again.
+
+agent.unset_env('IPADDRESS')
