@@ -41,6 +41,8 @@ def dump_retention():
     print()
 
 def set_retention(share_name, num_days):
+    # Ensure the key is present before using it
+    subprocess.run(["net", "registry", "createkey", REGISTRY_KEY], stdout=subprocess.DEVNULL)
     subprocess.run(
         ["net", "registry", "setvalue", REGISTRY_KEY, share_name, "sz", str(num_days)],
         check=True
