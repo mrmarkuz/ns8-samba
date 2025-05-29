@@ -59,3 +59,18 @@ subprocess.run(['podman', 'exec',
     check=True,
     text=True,
 )
+
+# Migrate shared folder attributes: audit, recycle, browseable
+for record in jaccounts:
+    if record['type'] != 'ibay':
+        continue
+    alter_share_input = {
+        "name": record["name"],
+        "browseable": record["props"].get("SmbShareBrowseable", "enabled") == "enabled",
+        "enable_audit": record["props"].get("SmbAuditStatus", "disabled") == "enabled",
+        "enable_recycle": record["props"].get("SmbRecycleBinStatus", "disabled") == "enabled",
+    }
+    subprocess.run(['../actions/alter-share/50alter_share'],
+        input=json.dumps(alter_share_input),
+        text=True,
+        stdout=sys.stderr)
