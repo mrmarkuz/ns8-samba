@@ -73,7 +73,7 @@ def get_script_dc(new_nbalias, old_nbalias):
 
 def set_nbalias(request):
     new_nbalias = request['nbalias']
-    old_nbalias = os.getenv('NBALIAS')
+    old_nbalias = os.getenv('NBALIAS', '')
     if new_nbalias == old_nbalias:
         return False
     # Bash script to run in samba-dc container

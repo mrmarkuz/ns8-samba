@@ -25,3 +25,4 @@ for evar in [
     agent.set_env(evar, ienv[evar])
 
 agent.set_env('SERVER_ROLE', 'dc')
+agent.set_env('NBALIAS', '')

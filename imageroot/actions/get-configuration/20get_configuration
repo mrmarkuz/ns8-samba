@@ -16,7 +16,7 @@ def main():
         'credentials_required': os.getenv("SERVER_ROLE") == "member",
         'realm': get_realm_lc(),
         'domain': os.getenv('DOMAIN', get_realm_lc()),
-        'nbalias': os.getenv('NBALIAS'),
+        'nbalias': os.getenv('NBALIAS', ''),
         'nbdomain': os.getenv('NBDOMAIN'),
         'ipaddress': os.getenv('IPADDRESS'),
         'ipaddress_list': samba.ipaddress_list(skip_wg0=True),
