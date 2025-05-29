@@ -81,7 +81,7 @@ if [[ "$(net conf getparm "${sharename}" 'acl_xattr:ignore system acls' 2>/dev/n
     net conf delparm "${sharename}" 'acl_xattr:ignore system acls'
     # Reset ACLs, ownership and permissions:
     setfacl -R -b "${share_root}"
-    chmod -R 0775 "${share_root}"
+    chmod -R =0775 "${share_root}"
     chown -R "root:users" "${share_root}"
 fi
 
