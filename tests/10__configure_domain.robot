@@ -15,6 +15,7 @@ Retrieve defaults
     Should Not Be Empty    ${IPADDR}
 
 Configure the domain
+    [Tags]    create    instance
     Set Global Variable    ${DOMAIN}    ${MID1}.test
     Set Global Variable    ${DOMSUFFIX}    dc=${MID1},dc=test
     ${out}    ${err}     ${rc} =    Execute Command

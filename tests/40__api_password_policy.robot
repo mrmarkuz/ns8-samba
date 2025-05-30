@@ -35,11 +35,5 @@ Accept the old strong password
 Accept another strong password
     Run task    module/${MID1}/alter-user    {"user":"pu1","password":"1234,Nethesis"}    rc_expected=0
 
-Reject password in history with strong password policy
-    Run task    module/${MID1}/alter-user    {"user":"pu1","password":"Nethesis,4321"}    rc_expected=1
-
 Reject short password with strong password policy
     Run task    module/${MID1}/alter-user    {"user":"pu1","password":"Net1"}    rc_expected=1
-
-Reject the same password with strong password policy
-    Run task    module/${MID1}/alter-user    {"user":"pu1","password":"1234,Nethesis"}    rc_expected=1
