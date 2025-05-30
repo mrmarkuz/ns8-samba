@@ -28,12 +28,17 @@ import secrets
 import string
 import cluster.userdomains
 import ipaddress
+import socket
+import samba
+from agent.ldapproxy import Ldapproxy
+from agent.ldapclient import Ldapclient
 
 module_id = os.environ['MODULE_ID']
 request = json.load(sys.stdin)
 realm = request['realm'].upper()
 hostname = request['hostname'].lower()
 provision_type = request['provision']
+server_role = 'dc'
 
 with agent.redis_connect() as rdb:
     cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
@@ -50,13 +55,56 @@ with agent.redis_connect() as rdb:
         # Generate a random password for ldapservice
         alphabet = string.ascii_letters + string.digits + '+-/,.-_^'
         svcpass = ''.join([secrets.choice(alphabet) for i in range(32)])
+    elif provision_type == 'join-member':
+        svcpass = '' # not used
+        server_role = 'member'
+        # Get the first provider of kdomain:
+        edomains = cluster.userdomains.get_external_domains(rdb)
+        if kdomain in domains:
+            peer_address = domains[kdomain]['providers'][0]['host']
+        elif kdomain in edomains:
+            peer_address = edomains[kdomain]['providers'][0]['host']
+        # Get the provider IP address to configure our DNS resolv.conf
+        try:
+            addrinfo = socket.getaddrinfo(peer_address, 53)
+            dns1address = addrinfo[0][4][0]
+        except Exception as ex:
+            print(agent.SD_ERR, "Address resolution error:", ex, file=sys.stderr)
+            json.dump([{"field": "realm", "parameter": "realm", "value": realm, "error": "realm_dc_avail_check_failed"}], fp=sys.stdout)
+            agent.set_status('validation-failed')
+            sys.exit(6)
+        # Look up NBDOMAIN in AD LDAP with the first domain provider:
+        domparams = Ldapproxy().get_domain(kdomain)
+        ldapconn = Ldapclient.factory(**domparams).ldapconn
+        results = ldapconn.search(
+            search_base=f'CN=Partitions,CN=Configuration,{domparams["base_dn"]}',
+            search_filter=f'(&(objectClass=crossRef)(nCName={domparams["base_dn"]}))',
+            attributes=['nETBIOSName'],
+        )
+        nbdomain = results[2][0]['attributes']['nETBIOSName']
+        # Do not trust the realm input parameter value (alias kdomain)
+        # because it can be aribitrarily set in external domains. To
+        # safely set REALM, retrieve the AD DNS domain name straight from
+        # AD LDAP.
+        results = ldapconn.search(
+            search_base='',
+            search_filter='(objectClass=*)',
+            search_scope='BASE',
+            attributes=['*'],
+        )
+        realm = results[2][0]['attributes']['defaultNamingContext'][0].upper().removeprefix("DC=").replace(",DC=", ".")
+        samba.validate_hostname(request['hostname'], realm.lower(), nameservers=[dns1address])
+        agent.set_env('DNS1ADDRESS', dns1address)
     else:
         print(agent.SD_ERR + "Bogus provision value! " + provision_type, file=sys.stderr)
         sys.exit(1)
 
+agent.set_env('SERVER_ROLE', server_role)
 agent.set_env('PROVISION_TYPE', provision_type)
 agent.set_env('NBDOMAIN', nbdomain)
-agent.set_env('REALM', realm)
+agent.set_env('NBALIAS', request.get('nbalias', ''))
+agent.set_env('REALM', realm) # The AD Kerberos realm or domain name
+agent.set_env('DOMAIN', kdomain) # The NS8 domain name
 agent.set_env('HOSTNAME', hostname + '.' + realm.lower())
 agent.set_env('IPADDRESS', request['ipaddress'])
 if ipaddress.ip_address(request['ipaddress']) in cluster_network:

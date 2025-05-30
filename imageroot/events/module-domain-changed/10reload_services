@@ -12,7 +12,7 @@ import agent
 
 
 event = json.load(sys.stdin)
-domain = os.environ["REALM"].lower()
+domain = os.getenv('DOMAIN', os.environ["REALM"].lower())
 if not domain in event["domains"]:
     sys.exit(0)
 

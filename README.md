@@ -1,35 +1,52 @@
 # samba
 
-The Samba module allows to install one or more AD domains in a NS8
-cluster. An AD domain (or realm, in Kerberos terms), can have one or more
-domain controllers (DCs). Provisioning a new domain and joining an
-additional domain controller to an existing domain are both implemented by
-the same action: `configure-module`.
+The Samba module allows the creation of multiple AD domains within an NS8
+cluster. An AD domain (or *realm*, in Kerberos terms) can have one or more
+domain controllers (DCs). Alternatively, Samba can be configured as a
+File Server joined to an existing Active Directory domain.
 
-A Samba DC requires a dedicated IP address. Two DCs cannot share the same
-IP.
+A Samba module instance requires a dedicated IP address and binds to
+well-known TCP ports. Multiple instances cannot run on the same system due
+to TCP port conflicts.
 
-Do not assign the IP address of a untrusted network! The IP address
-assigned to Samba DC exposes internal services that are not designed to be
-exposed publicly. The IP address can be added to the cluster VPN routes,
-so DCs can see each other and perform replication.
+**Do not assign an IP address from an untrusted network!** The IP address
+assigned to a Samba instance exposes internal services that are not
+designed to be publicly accessible. This IP is automatically added to the
+cluster VPN routes, allowing Samba instances to reach domain controllers
+for replication and authentication.
 
-The LDAP service of Samba DCs does not allow clear-text LDAP binds: enable
-TLS or use Kerberos/GSSAPI authentication in external applications.
-Applications that run as cluster modules must connect to the LDAP service
-of Samba DCs through the Ldapproxy instance running on the local node; read
-the core documentation for more information about Ldapproxy.
+The LDAP service of Samba DCs does not support clear-text LDAP binds. You
+must enable TLS or use Kerberos/GSSAPI authentication in external
+applications. Cluster modules must connect to the Samba LDAP service
+through the local `Ldapproxy` instance. See the core documentation for
+more details about Ldapproxy.
 
 ## Installation
 
-A Samba module instance is also an account provider. It must be installed
-with the specific `add-internal-provider` action:
+As Samba binds to well-known TCP/UDP ports, only one instance can run on
+each node.
+
+To run a Samba instance as an account provider, install it using the
+`add-internal-provider` action:
 
     api-cli run add-internal-provider --data '{"image":"samba","node":1}'
 
+To run a File Server without Domain Controller services, install it like
+any other module:
+
+    add-module samba 1
+
 ## Provision
 
-For example, to provision a new domain:
+After installation, the module must be provisioned with domain data before
+starting its services. The `configure-module` action supports three types
+of provisioning:
+
+1. `new-domain` (role `dc`): Initializes the first DC of a new Active Directory domain.
+2. `join-domain` (role `dc`): Joins an additional DC to an existing domain.
+3. `join-member` (role `member`): Joins an existing AD domain as a File Server.
+
+Example: provision a new domain:
 
     api-cli run module/samba1/configure-module --data - <<EOF
     {
@@ -43,8 +60,7 @@ For example, to provision a new domain:
     }
     EOF
 
-Further Samba instances for the same `realm` can be **joined** to the existing domain.
-The command is similar.
+To join another instance to the same domain:
 
     api-cli run module/samba2/configure-module --data - <<EOF
     {
@@ -57,35 +73,47 @@ The command is similar.
     }
     EOF
 
+To join a File Server as a member of the domain:
+
+    api-cli run module/samba3/configure-module --data - <<EOF
+    {
+        "provision":"join-member",
+        "adminuser":"administrator",
+        "adminpass":"Nethesis,1234",
+        "realm":"ad.$(hostname -d)",
+        "hostname":"fs1",
+        "ipaddress":"10.143.0.2"
+    }
+    EOF
+
 ## IP routing for the AD domain
 
-In multiple DCs domains, DCs must connect each other to join the domain
-and for data replication. If a DC cannot contact other DCs the provision
-procedure fails.
+In domains with multiple DCs, domain controllers must communicate to join
+the domain and replicate data. If a DC cannot reach others, provisioning
+will fail.
 
-For this reason, if the IP of some domain controller is not in the
-routable networks of other nodes, then it is automatically configured to
-be routed through the cluster VPN. This typically happens if domain
-controllers reside in different networks.
+When a DC’s IP address is not directly reachable from other nodes, the
+system automatically configures routing through the cluster VPN. This is
+common when DCs are deployed in different networks.
 
-Check the IP addresses of domain controllers are routed through the VPN
-with the following commands:
+To check VPN routing for domain controller IPs:
 
     wg
     ip route
 
-The following command applies the necessary changes to the system routing
-table and to the Wireguard runtime configuration. It is automatically
-executed at system startup and when the VPN configuration changes, so
-manual execution should not be needed:
+Routing changes are handled by this command:
 
     apply-vpn-routes
+
+It updates both system routing and WireGuard configuration. It runs
+automatically at system startup and whenever VPN settings change, so
+manual use is rarely needed.
 
 See also the [Core VPN documentation](https://nethserver.github.io/ns8-core/core/vpn/#vpn).
 
 ## Create a new user account
 
-Create a new user and assign it to the `developers` group
+To create a new user and assign them to the `developers` group:
 
     api-cli run module/samba1/add-user --data - <<EOF
     {
@@ -101,57 +129,95 @@ Create a new user and assign it to the `developers` group
 
 ## User management web portal
 
-The `samba` module provides a public web portal where AD users can
-authenticate and change their passwords.
+When acting as a DC, the Samba module provides a public web portal where
+AD users can authenticate and change their passwords.
 
-The module registers a Traefik path route, with the domain name as suffix.
-For instance:
+The module registers a Traefik path route, using the domain name as a
+suffix, e.g.:
 
     https://<node FQDN>/users-admin/domain.test/
 
-The backend endpoint is advertised as `users-admin` service and can be
-discovered in the usual ways, as documented in [Service
-discovery](https://nethserver.github.io/ns8-core/modules/service_providers/#service-discovery).
-For instance:
+This service is advertised under the name `users-admin` and can be
+discovered using the standard mechanisms. For example:
 
     api-cli run module/mymodule1/list-service-providers  --data '{"service":"users-admin", "filter":{"domain":"dp.nethserver.net","node":"1"}}'
 
-The event `service-users-admin-changed` is raised when the serivice
-becomes available or is changed.
+The event `service-users-admin-changed` is triggered when the service
+becomes available or is updated.
 
-The backend of the module runs under the `api-moduled.service` Systemd
-unit supervision. Refer also to `api-moduled` documentation, provided by
-`ns8-core` repository.
+The module backend runs under the `api-moduled.service` Systemd unit. See
+`api-moduled` documentation (from the `ns8-core` repository) for details.
 
-API implementation code is under `imageroot/api-moduled/handlers/`, which
-is mapped to an URL like
+API implementation files are located under
+`imageroot/api-moduled/handlers/`, and mapped to:
 
     https://<node FQDN>/users-admin/domain.test/api/
 
-The `.json` files define the API input/output syntax validation, using the
-JSON schema language. As such they can give an idea of request/response
-payload structure.
+`.json` files in that directory define API schemas (input/output) using
+JSON Schema. These files describe the request and response formats.
 
-## File server
+## File Server
 
-If Samba binds to the **internal VPN interface** (see `ipaddress`
-attribute in the Provision section) it is **not reachable** by clients in
-other networks.
+Any Samba instance (whether its role is `dc` or `member`) can act as a
+**file server**, provided it uses a **private network** IP address.
+Windows-compatible clients can access shared folders and home directories
+using domain credentials (guest access is not supported).
 
-On the contrary, a Samba instance can be used as a **file server** from
-Windows-compatible clients and they can access shared folders and home
-directories with domain credentials (guest access does not work at all).
+- A user's home directory is created in the `homes` volume when they log in.
 
-- Whenever a user session is established the user's home directory is
-  created in the `homes` volume.
+- Shared folders are managed through the file server API and stored in the
+  `shares` volume. If a shared folder has the same name as a domain user,
+  that user's home directory becomes inaccessible.
 
-- To create and manage shared folders, use the file server API. Shared
-  folders are stored in the `shares` volume. If a shared folder has the
-  same name of a domain user, the home directory of that user is no longer
-  accessible.
   + `list-shares`
   + `add-share`, `alter-share`, `remove-share`
   + `reset-share-acls`
+
+If Samba runs as a DC and is bound to the **internal VPN interface** (see
+the `ipaddress` attribute in the Provision section), it will be
+**inaccessible** to clients from other networks.
+
+## Samba Audit
+
+User activity on shared folders can be recorded in a TimescaleDB instance.
+
+Access TimescaleDB on port 15432 as user `postgres` (full privileges) or
+`samba_audit` (select-only privileges). Passwords are saved into
+`state/timescaledb.env`
+
+By default, no events from the Samba `vfs_full_audit` module are logged.
+Audit logging must be explicitly enabled per share using the share
+management actions. For example:
+
+    api-cli run module/samba1/alter-share --data '{"name":"myshare","enable_audit":true}'
+
+To include failed access attempts in the audit log, add the
+`log_failed_events` attribute:
+
+    api-cli run module/samba1/alter-share --data '{"name":"myshare","enable_audit":true,"log_failed_events":true}'
+
+The following events are logged to TimescaleDB by default:
+
+* **Success events**: `create_file unlinkat renameat mkdirat fsetxattr`
+* **Failure events**: `create_file openat unlinkat renameat mkdirat
+  fsetxattr`
+
+You can override these defaults using the following environment variables:
+
+* `SAMBA_AUDIT_SUCCESS`
+* `SAMBA_AUDIT_FAILURE`
+
+For example, to log all successful events, add the following line to the
+`state/environment` file:
+
+    SAMBA_AUDIT_SUCCESS=all
+
+The change takes effect the next time an `alter-share` or `add-share`
+action is executed.
+
+Review the current audit settings with this command:
+
+    podman exec samba-dc net conf list
 
 ## Restore from backup
 
@@ -172,6 +238,38 @@ only extracts the contents of home directories and shared folders from the
 backup set. When the procedure completes, go to the ``Domain and users``
 page and resume the configuration of the DC: it must be joined to the
 domain as a new DC.
+
+The `samba_audit` DB is also included in the backup set, and restored by
+the usual procedure.
+
+## Recycle bin
+
+A shared folder can be configured to retain deleted files for a specified
+number of days, or indefinitely. For example, the following command
+enables the recycle function and sets a retention period of 12 days for
+files deleted from *myshare2*:
+
+    api-cli run module/samba3/alter-share --data '{"name":"myshare2","enable_recycle":true,"recycle_retention":12}'
+
+Each day, the automatic `recycle run_daemon` procedure in the `samba-dc`
+container scans for files and directories whose filesystem change time
+exceeds the configured retention period and removes them. If a retention
+value of `0` is set, the automatic cleanup procedure is disabled.
+
+When the recycle bin is enabled, the Samba share parameter
+`recycle:repository = .recycle` is set in the share registry
+configuration. Review the current share configuration with:
+
+    podman exec samba-dc net conf list
+
+The default repository value `.recycle` assigned to enable the recycle bin
+can be adjusted by executing a command like this:
+
+    python3 -magent -c 'agent.set_env("RECYCLE_REPOSITORY", ".myrecycle")'
+
+## Known log messages
+
+- `warning: there are circular foreign-key constraints on this table` This warning from TimescaleDB backup procedure is harmless. See https://docs.timescale.com/self-hosted/latest/troubleshooting/#errors-encountered-during-a-pg_dump-migration.
 
 ## Migration notes
 

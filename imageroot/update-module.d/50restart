@@ -10,4 +10,4 @@ set -e
 exec 1>&2
 
 # Restart the service
-systemctl --user try-restart samba-dc.service api-moduled.service
+systemctl --user try-restart samba-dc.service api-moduled.service timescaledb.service

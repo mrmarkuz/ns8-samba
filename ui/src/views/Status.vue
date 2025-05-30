@@ -40,41 +40,116 @@
       </cv-column>
     </cv-row>
     <cv-row>
-      <cv-column :md="4" :max="4">
-        <NsInfoCard
-          light
-          :title="configuration ? configuration.realm : '-'"
-          :description="$t('status.domain')"
-          :icon="Events32"
-          :loading="!configuration"
-          class="min-height-card"
+      <cv-column>
+        <!-- card grid -->
+        <div
+          class="
+            card-grid
+            grid-cols-1
+            sm:grid-cols-2
+            xl:grid-cols-3
+            3xl:grid-cols-4
+          "
         >
-          <template slot="content">
-            <NsButton
-              kind="ghost"
-              :icon="ArrowRight20"
-              @click="goToDomainsAndUsers"
-            >
-              {{ $t("status.go_to_domains_and_users") }}
-            </NsButton>
-          </template>
-        </NsInfoCard>
-      </cv-column>
-      <cv-column :md="4" :max="4">
-        <NsInfoCard
-          light
-          :title="numShares.toString()"
-          :description="$t('status.shared_folders')"
-          :icon="FolderShared32"
-          :loading="loading.listShares"
-          class="min-height-card"
-        >
-          <template slot="content">
-            <NsButton kind="ghost" :icon="ArrowRight20" @click="goToShares">
-              {{ $t("status.go_to_shared_folders") }}
-            </NsButton>
-          </template>
-        </NsInfoCard>
+          <!-- ad domain -->
+          <NsInfoCard
+            light
+            :title="configuration ? configuration.domain : '-'"
+            :description="$t('settings.domain')"
+            :icon="Events32"
+            :loading="!configuration"
+            class="min-height-card"
+          >
+            <template slot="content">
+              <NsButton
+                kind="ghost"
+                :icon="ArrowRight20"
+                @click="goToDomainsAndUsers"
+              >
+                {{ $t("status.go_to_domains_and_users") }}
+              </NsButton>
+            </template>
+          </NsInfoCard>
+          <!-- netbios domain -->
+          <NsInfoCard
+            light
+            :title="configuration ? configuration.nbdomain : '-'"
+            :description="$t('settings.netbios_domain_name')"
+            :icon="Events32"
+            :loading="!configuration"
+            class="min-height-card"
+          />
+          <!-- file server name -->
+          <NsInfoCard
+            light
+            :title="configuration ? configuration.hostname : '-'"
+            :description="$t('settings.file_server_name')"
+            :icon="InformationSquare32"
+            :loading="!configuration"
+            class="min-height-card"
+          />
+          <!-- file server alias -->
+          <NsInfoCard
+            light
+            :title="
+              configuration && configuration.nbalias
+                ? configuration.nbalias
+                : $t('settings.not_set')
+            "
+            :description="$t('settings.file_server_alias')"
+            :icon="InformationSquare32"
+            :loading="!configuration"
+            class="min-height-card"
+          >
+            <template slot="content">
+              <NsButton
+                kind="ghost"
+                :icon="ArrowRight20"
+                @click="goTo('settings')"
+              >
+                {{ $t("status.go_to_settings") }}
+              </NsButton>
+            </template>
+          </NsInfoCard>
+          <!-- file server ip address -->
+          <NsInfoCard
+            light
+            :title="configuration ? configuration.ipaddress : '-'"
+            :description="$t('settings.file_server_ip_address')"
+            :icon="InformationSquare32"
+            :loading="!configuration"
+            class="min-height-card"
+          >
+            <template slot="content">
+              <NsButton
+                kind="ghost"
+                :icon="ArrowRight20"
+                @click="goTo('settings')"
+              >
+                {{ $t("status.go_to_settings") }}
+              </NsButton>
+            </template>
+          </NsInfoCard>
+          <!-- shared folders -->
+          <NsInfoCard
+            light
+            :title="numShares.toString()"
+            :description="$t('status.shared_folders')"
+            :icon="FolderShared32"
+            :loading="loading.listShares"
+            class="min-height-card"
+          >
+            <template slot="content">
+              <NsButton
+                kind="ghost"
+                :icon="ArrowRight20"
+                @click="goTo('shares')"
+              >
+                {{ $t("status.go_to_shared_folders") }}
+              </NsButton>
+            </template>
+          </NsInfoCard>
+        </div>
       </cv-column>
     </cv-row>
     <!-- general -->
@@ -305,6 +380,7 @@ import {
   UtilService,
   PageTitleService,
 } from "@nethserver/ns8-ui-lib";
+import InformationSquare32 from "@carbon/icons-vue/es/information--square/32";
 
 export default {
   name: "Status",
@@ -347,6 +423,7 @@ export default {
         listBackups: "",
         listShares: "",
       },
+      InformationSquare32,
     };
   },
   computed: {
@@ -605,8 +682,8 @@ export default {
     goToDomainsAndUsers() {
       this.core.$router.push("/domains");
     },
-    goToShares() {
-      this.goToAppPage(this.instanceName, "shares");
+    goTo(path) {
+      this.goToAppPage(this.instanceName, path);
     },
   },
 };

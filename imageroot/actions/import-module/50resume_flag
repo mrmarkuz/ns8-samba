@@ -1,1 +1,28 @@
-../restore-module/20resume_flag
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2025 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import agent
+import json
+import sys
+import os
+import ipaddress
+
+with agent.redis_connect() as rdb:
+    cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
+
+samba_ipaddress = os.environ['IPADDRESS']
+module_id = os.environ['MODULE_ID']
+
+if ipaddress.ip_address(samba_ipaddress) in cluster_network:
+    agent.set_env('PREFIXLEN', str(cluster_network.prefixlen))
+else:
+    agent.unset_env('PREFIXLEN')
+    # The instance is bound to a local network IP address: mark it with
+    # the "file_server" flag, to enforce our business rules about Samba
+    # DCs and file server instances.
+    with agent.redis_connect(privileged=True) as prdb:
+        prdb.sadd(f"module/{module_id}/flags", "file_server")

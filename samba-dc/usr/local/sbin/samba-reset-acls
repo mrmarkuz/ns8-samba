@@ -81,7 +81,7 @@ if [[ "$(net conf getparm "${sharename}" 'acl_xattr:ignore system acls' 2>/dev/n
     net conf delparm "${sharename}" 'acl_xattr:ignore system acls'
     # Reset ACLs, ownership and permissions:
     setfacl -R -b "${share_root}"
-    chmod -R 0775 "${share_root}"
+    chmod -R =0775 "${share_root}"
     chown -R "root:users" "${share_root}"
 fi
 
@@ -148,7 +148,7 @@ if [[ -z "${is_home_dir}" ]]; then
     #
     sddl_acl_file="O:LAG:DUD:AI(A;ID;${perms_full};;;SY)(A;ID;${perms_full};;;BA)${ace_group_file}${ace_everyone_file}"
     sddl_acl_sdir="O:LAG:DUD:AI(A;OICIID;${perms_full};;;SY)(A;OICIID;${perms_full};;;BA)${ace_group_sdir}${ace_everyone_sdir}"
-    sddl_acl_root="O:LAG:DUD:PAI(A;;RC;;;DD)(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_group_root}${ace_everyone_root}"
+    sddl_acl_root="O:LAG:DUD:PAI(A;;RC;;;NU)(A;OICI;${perms_full};;;SY)(A;OICI;${perms_full};;;BA)${ace_group_root}${ace_everyone_root}"
 else
     #
     # ACL for home directory

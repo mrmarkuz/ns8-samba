@@ -29,6 +29,13 @@
         <span>{{ $t("shares.title") }}</span>
       </cv-side-nav-link>
       <cv-side-nav-link
+        @click="goToAppPage(instanceName, 'settings')"
+        :class="{ 'current-page': isLinkActive('settings') }"
+      >
+        <template v-slot:nav-icon><Settings20 /></template>
+        <span>{{ $t("settings.title") }}</span>
+      </cv-side-nav-link>
+      <cv-side-nav-link
         @click="goToAppPage(instanceName, 'about')"
         :class="{ 'current-page': isLinkActive('about') }"
       >
@@ -43,6 +50,7 @@
 import FolderShared20 from "@carbon/icons-vue/es/folder--shared/20";
 import Information20 from "@carbon/icons-vue/es/information/20";
 import Activity20 from "@carbon/icons-vue/es/activity/20";
+import Settings20 from "@carbon/icons-vue/es/settings/20";
 import { mapState } from "vuex";
 import { QueryParamService, UtilService } from "@nethserver/ns8-ui-lib";
 
@@ -52,6 +60,7 @@ export default {
     FolderShared20,
     Information20,
     Activity20,
+    Settings20,
   },
   mixins: [QueryParamService, UtilService],
   data() {

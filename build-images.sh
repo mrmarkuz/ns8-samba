@@ -14,7 +14,8 @@ if ! buildah inspect --type container "${container}" &>/dev/null; then
     buildah run "${container}" -- bash <<'EOF'
 set -e
 apt-get update
-apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils acl smbclient libnss-winbind rsync plocate wsdd
+apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils acl smbclient libnss-winbind rsync plocate wsdd \
+    syslog-ng-core syslog-ng-mod-sql libdbd-pgsql
 apt-get clean
 find /var/lib/apt/lists/ -type f -delete
 EOF
@@ -49,6 +50,8 @@ sed -r -i '/^HOME_MODE/ s/\b0750\b/0700/' /etc/login.defs
 EOF
 buildah config --cmd='' \
     --entrypoint='["/entrypoint.sh"]' \
+    --env=SERVER_ROLE=dc \
+    --env=DNS1ADDRESS=127.0.0.1 \
     --volume=/srv/shares \
     --volume=/srv/homes \
     --volume=/var/lib/samba \
@@ -84,11 +87,10 @@ buildah add "${container}" ns8-user-manager-${user_manager_version}.tar.gz /imag
 buildah add "${container}" ui/dist /ui
 buildah config \
     --label="org.nethserver.max-per-node=1" \
-    --label="org.nethserver.min-core=3.6.3-0" \
-    --label "org.nethserver.images=ghcr.io/nethserver/samba-dc:${IMAGETAG:-latest}" \
-    --label 'org.nethserver.authorizations=node:fwadm ldapproxy@node:accountprovider cluster:accountprovider traefik@node:routeadm' \
+    --label="org.nethserver.min-core=3.9.0-0" \
+    --label "org.nethserver.images=ghcr.io/nethserver/samba-dc:${IMAGETAG:-latest} docker.io/timescale/timescaledb:2.19.3-pg17" \
+    --label 'org.nethserver.authorizations=node:fwadm cluster:accountprovider traefik@node:routeadm' \
     --label="org.nethserver.tcp-ports-demand=1" \
-    --label 'org.nethserver.flags=core_module account_provider' \
     --entrypoint=/ "${container}"
 buildah commit "${container}" "${repobase}/${reponame}"
 images+=("${repobase}/${reponame}")

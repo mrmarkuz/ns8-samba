@@ -5,8 +5,22 @@
     "description": "Create a new shared folder",
     "examples": [
         {
+            "name": "myshare002",
+            "description": "With Samba Audit",
+            "enable_audit": true,
+            "browseable": false,
+            "log_failed_events": false
+        },
+        {
             "name": "myshare001",
+            "browseable": true,
             "description": "First share"
+        },
+        {
+            "name": "myshare002",
+            "description": "Second share",
+            "enable_recycle": true,
+            "recycle_retention": 30
         },
         {
             "name": "myshare001",
@@ -20,6 +34,28 @@
         "name"
     ],
     "properties": {
+        "browseable": {
+            "type": "boolean",
+            "default": true,
+            "description": "If true the share is browseable to users, and is listed as a server resource. If false users must know its name to connect with it because it is not included in the network share list."
+        },
+        "enable_recycle": {
+            "type": "boolean",
+            "description": "Enable the Recycle Bin for this network share."
+        },
+        "recycle_retention": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of days deleted files are retained in the Recycle Bin before permanent removal. 0 = Infinite"
+        },
+        "enable_audit": {
+            "type": "boolean",
+            "description": "Enable the basic audit log for the share"
+        },
+        "log_failed_events": {
+            "type": "boolean",
+            "description": "Add failed events to the audit log"
+        },
         "name": {
             "type": "string",
             "pattern": "^[^/\\\\:><\"|?*]+$",

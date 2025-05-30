@@ -13,10 +13,13 @@ import string
 import secrets
 import json
 
+if os.getenv("SERVER_ROLE") == "member" or not os.getenv("IPADDRESS"):
+    sys.exit(0)
+
 agent_id = os.environ['AGENT_ID']
 agent_install_dir = os.environ['AGENT_INSTALL_DIR']
 node_id = int(os.environ['NODE_ID'])
-domain = os.environ['REALM'].lower()
+domain = os.getenv('DOMAIN', os.environ['REALM'].lower())
 amld_port = os.environ['TCP_PORT']
 
 agent.assert_exp(int(amld_port) > 0) # Ensure TCP port for api-moduled was allocated

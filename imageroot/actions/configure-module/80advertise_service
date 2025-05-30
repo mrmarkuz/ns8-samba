@@ -26,16 +26,16 @@ import os
 import sys
 import json
 
+if os.getenv("SERVER_ROLE") == "member" or not os.getenv("IPADDRESS"):
+    sys.exit(0)
+
 agent_id = os.environ['AGENT_ID']
 node_id = int(os.environ['NODE_ID'])
-domain = os.environ['REALM'].lower()
+domain = os.getenv('DOMAIN', os.environ['REALM'].lower())
 base_dn = 'DC=' + domain.replace('.', ',DC=')
 svcpass = os.environ['SVCPASS']
 svcuser = os.environ['SVCUSER']
 ip_address = os.environ['IPADDRESS']
-
-if not "PROVISION_TYPE" in os.environ:
-    sys.exit(0)
 
 data={
     "node": str(node_id),

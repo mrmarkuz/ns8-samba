@@ -5,24 +5,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-import os
-import sys
-import agent
-import cluster.userdomains
+import samba
 
-kdomain = os.environ['REALM'].lower()
-
-rdb = agent.redis_connect()
-domains = cluster.userdomains.get_internal_domains(rdb)
-
-if not kdomain in domains:
-    raise Exception(f'Realm "{kdomain}" not found')
-
-for provider in domains[kdomain]['providers']:
-    if provider['id'] != os.environ["MODULE_ID"]:
-        break # DC found. Stop searching.
-else:
-    # DC not found: error!
-    raise Exception(f'DC for "{kdomain}" not found')
-
-print(provider['host'])
+print(samba.get_joinaddress())

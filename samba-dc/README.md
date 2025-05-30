@@ -1,10 +1,14 @@
 # samba-dc
 
-This image provides a Samba domain controller with a basic file server
-configuration. Read carefully the Samba Wiki section about [using a DC as
-a file
+This image provides a Samba Domain Controller (DC) providing also File
+Server functionality. Read carefully the Samba Wiki section about [using a
+DC as a file
 server](https://wiki.samba.org/index.php/Setting_up_Samba_as_an_Active_Directory_Domain_Controller#Using_the_Domain_Controller_as_a_File_Server_.28Optional.29)
 to understand its limitations.
+
+As alternative the image can run also in File Server mode without DC
+services (e.g. DNS, Kerberos, LDAP). See also [Samba "member server"
+role](https://wiki.samba.org/index.php/Setting_up_Samba_as_a_Domain_Member).
 
 ## TCP/UDP ports
 
@@ -23,6 +27,7 @@ The container uses the following ports:
 - `636/tcp`, LDAPS
 - `3268/tcp`, Global Catalog
 - `3269/tcp`,  Global Catalog SSL
+- `15432/tcp`, TimescaleDB for Audit Log
 - `49152-65535/tcp` Dynamic RPC Ports
 
 ## Volumes
@@ -55,6 +60,9 @@ individual command documentation for more information.
   `/var/lib/samba` to avoid conflicts with the backup procedure.
 - `SAMBA_LOGLEVEL`, default `1`: value for the `log level` configuration
   directive.
+- `SERVER_ROLE`, switch the server role between `dc` (default) and `member`
+- `DNS1ADDRESS`, `DNS2ADDRESS`, set IP addresses of DNS servers for domain
+  member role.
 
 ## Custom configuration
 
@@ -69,14 +77,14 @@ corresponds to this container path:
 The container entrypoint in any case runs the `expand-config` command, to
 properly initialize the container configuration files.
 
-If any argument is passed to the container entrypoint it is interpreted as
-a command to execute. This behavior is required to run `new-domain` and
-`join-domain`.
+Arguments passed to the container entrypoint are interpreted as an
+additional command to execute. This behavior is required to run
+`new-domain`, `join-domain` and `join-member` provisioning procedures.
 
-If no arguments are passed, the normal services are started:
+If no arguments are passed, the services of the configured role are started.
 
-- `samba`
-- `chronyd`
+- Services of role `dc` (default): `samba`, `chronyd`, `wsdd`.
+- Services of role `member`: `smbd`, `nmbd`, `winbindd`, `wsdd`.
 
 ## Commands
 
@@ -84,9 +92,9 @@ Commands are installed under `/usr/local/sbin`.
 
 ### `expand-config`
 
-The `expand-config` command runs at the container entrypoint. It writes
-the following configuration files, based on the values of the container
-environment variables.
+The `expand-config` command is executed by the container entrypoint. It
+writes the following configuration files, based on the values of the
+container environment variables.
 
 - `/etc/hosts`
 - `/etc/krb5.conf`
@@ -137,6 +145,17 @@ procedure.
 Like the `new-domain` command, if `join-domain` terminates with exit-code
 `0` the volumes are left ready for starting the DC.
 
+### `join-member`
+
+This command is designed to run as the container entrypoint argument. Eg.
+
+    podman run --env=SERVER_MODE=member --env=DNS1ADDRESS=10.5.4.1 ... --volume data:/var/lib/samba:z ... samba-dc:latest join-member
+
+Like `join-domain` it expects `ADMINCREDS=` is set to join the domain as a
+member server. The `SERVER_MODE=member` ensures that configuration files
+are written specifically for the "member server" Samba role, as documented
+in Samba Wiki page. For this purpose, the `DNS1ADDRESS=` must be set too.
+
 ### `samba-add-share`
 
 Create a new directory under `SAMBA_SHARES_DIR` and add it to the Samba
@@ -182,3 +201,40 @@ Samba configuration registry.
 This command checks if the local DC is assigned some FSMO role. Run this
 check before decommissioning the DC. Exit-code `2` means some FSMO role is
 assigned to the DC.
+
+### `recycle`
+
+This script manages the retention policy of deleted files stored in Samba
+recycle bins. It supports three subcommands:
+
+* **`dump_retention`**: Displays current retention settings from the
+  registry in JSON format.
+* **`set_retention <share> <days>`**: Sets the number of days to retain
+  deleted files for a given share.
+* **`run_daemon`**: Runs an endless loop that, once per day, deletes files
+  from the Recycle bin repository folder of each share whose **change time
+  (`ctime`)** exceeds the configured retention period.
+
+## Known startup log messages
+
+At startup, some messages may appear in the log. They might look like
+issues, but they are actually harmless and can be safely ignored.
+
+- `RPC fault code DCERPC_NCA_S_OP_RNG_ERROR received from host fs1!` --
+  Caused by a race condition during daemon startup
+
+- `ldb: Unable to open tdb '/var/lib/samba/private/secrets.ldb': No such file or directory` -- See bug https://bugzilla.samba.org/show_bug.cgi?id=14657
+
+- `Failed with NT_STATUS_INVALID_SID.` Special SIDs used by some
+  authentication methods (e.g., Kerberos) are not properly mapped by
+  Winbind.
+
+- `TSIG error with server: tsig verify failure`,
+  `dnsupdate_nameupdate_done: Failed DNS update with exit code 10` Another
+  race condition. DNS records will be updated correctly when Samba has
+  started.
+
+- `smart-multi-line: error opening smart-multi-line.fsm file`, `your
+  smart-multi-line.fsm seems to be empty or non-existent`. These messages
+  are from `syslog-ng` which expects a file not packaged in Ubuntu 24.04.2
+  LTS (Noble Numbat).

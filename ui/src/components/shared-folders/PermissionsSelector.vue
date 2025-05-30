@@ -10,7 +10,6 @@
         light
         kind="selectable"
         v-model="ergrwSelected"
-        :footerIcon="Locked20"
         @click="permissionsSelected('ergrw')"
         value="permissionsValue"
         :disabled="disabled"
@@ -25,7 +24,6 @@
         light
         kind="selectable"
         v-model="grwSelected"
-        :footerIcon="Locked20"
         @click="permissionsSelected('grw')"
         value="permissionsValue"
         :disabled="disabled"
@@ -40,7 +38,6 @@
         light
         kind="selectable"
         v-model="erwSelected"
-        :footerIcon="Locked20"
         @click="permissionsSelected('erw')"
         value="permissionsValue"
         :disabled="disabled"

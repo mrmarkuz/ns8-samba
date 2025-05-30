@@ -23,11 +23,30 @@
 exec 1>&2
 set -e
 
-echo "Resume Samba DC state:"
+if [[ -f samba_audit.pgdump ]] ; then
+    echo "Restore samba_audit data in TimescaleDB:"
+    write-timescaledb-config # generate timescaledb.env
+    podman run \
+        --rm \
+        --log-driver=none \
+        --network=none \
+        --interactive \
+        --replace --name=timescaledb --rm \
+        --env=POSTGRES_DB=samba_audit \
+        --env=PGPORT=15432 \
+        --volume=../timescaledb-restoredb.d:/docker-entrypoint-initdb.d:z \
+        --volume=timescaledb:/var/lib/postgresql/data:z \
+        --env-file=timescaledb.env \
+        "${TIMESCALEDB_IMAGE}" < samba_audit.pgdump
+    rm -vf samba_audit.pgdump
+fi
+
+echo "Resume Samba ${SERVER_ROLE^^} state:"
 podman run --hostname="${HOSTNAME}" --interactive --workdir=/var/lib/samba \
     --log-driver=none \
-    --replace --name="${MODULE_ID}" --rm \
+    --replace --name=samba-restore --rm \
     --entrypoint=[] \
+    --env=SERVER_ROLE \
     --volume="config":/etc/samba \
     --volume="data":/var/lib/samba \
     "${SAMBA_DC_IMAGE}" bash -s <<'EOF'
@@ -35,23 +54,31 @@ podman run --hostname="${HOSTNAME}" --interactive --workdir=/var/lib/samba \
 set -e
 nbname=$(hostname -s | tr "[a-z]" "[A-Z]")
 
-samba-tool domain backup restore \
-    --backup-file=backup/samba-backup.tar.bz2 \
-    --targetdir=restore \
-    --newservername=${nbname}
+if [[ "${SERVER_ROLE}" == "member" ]] ; then
+    tar -x -f backup/samba-backup.tar.bz2 -v
+    find . -type f -name '*.bak' | while read -r tdbbak ; do
+        mv -v "${tdbbak}" "${tdbbak%%.bak}"
+    done
+    rm -rvf backup
+else
+    samba-tool domain backup restore \
+        --backup-file=backup/samba-backup.tar.bz2 \
+        --targetdir=restore \
+        --newservername=${nbname}
 
-sed "s/netbios name = .*/netbios name = ${nbname}/" restore/etc/smb.conf.orig | tee /etc/samba/smb.conf
+    sed "s/netbios name = .*/netbios name = ${nbname}/" restore/etc/smb.conf.orig | tee /etc/samba/smb.conf
 
-rm -rvf private sysvol
-mv -v restore/private .
-mv -v restore/state/sysvol .
-mv -vf restore/state/*.tdb .
-rm -rvf restore backup
-
+    rm -rvf private sysvol
+    mv -v restore/private .
+    mv -v restore/state/sysvol .
+    mv -vf restore/state/*.tdb .
+    rm -rvf restore backup
+fi
 net cache flush
 EOF
 
-if [[ -n "${PROVISION_TYPE}" ]]; then
-    # Enable and start the NSDC service
+if [[ -n "${IPADDRESS}" && -n "${REALM}" ]] ; then
+    # Enable and start Samba only if both IPADDRESS and REALM were set
+    # correctly:
     systemctl --user enable --now samba-dc.service
 fi

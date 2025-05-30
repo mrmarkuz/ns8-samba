@@ -8,21 +8,37 @@
 import sys
 import json
 import agent
+import samba
+import subprocess
 
 podman_exec = ["podman", "exec", "samba-dc"]
 
 request = json.load(sys.stdin)
 
 # Check if the share already exists
-pcheck = agent.run_helper(*(podman_exec + ["net", "conf", "showshare", request["name"]]))
+pcheck = subprocess.run(podman_exec + ["net", "conf", "showshare", request["name"]], stdout=subprocess.DEVNULL)
 if pcheck.returncode != 0:
     agent.set_status('validation-failed')
     json.dump([{'field':'name', 'parameter':'name','value': request['name'], 'error':'share_not_found'}], fp=sys.stdout)
     sys.exit(2)
 
-samba_add_share = podman_exec + ["net", "conf", "setparm", request["name"]]
-
 if 'description' in request:
-    samba_add_share += ["comment", request["description"]]
+    set_description_cmd = podman_exec + ["net", "conf", "setparm", request["name"], "comment", request["description"]]
+    agent.run_helper(*set_description_cmd)
 
-phelper = agent.run_helper(*samba_add_share).check_returncode()
+if 'enable_audit' in request:
+    samba.configure_samba_audit(
+        request['name'],
+        request['enable_audit'],
+        request.get('log_failed_events', False))
+
+if 'enable_recycle' in request:
+    samba.configure_recycle(
+        request['name'],
+        request['enable_recycle'],
+        request.get('recycle_retention', 0))
+
+if 'browseable' in request:
+    samba.configure_browseable(
+        request['name'],
+        request['browseable'])

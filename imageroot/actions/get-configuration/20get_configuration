@@ -8,17 +8,51 @@
 import json
 import sys
 import os
+import samba
 
-if 'REALM' in os.environ:
-    realm = os.environ["REALM"].lower()
-else:
-    realm = None
+def main():
+    config = {
+        'configuration_required': get_configuration_required(),
+        'credentials_required': os.getenv("SERVER_ROLE") == "member",
+        'realm': get_realm_lc(),
+        'domain': os.getenv('DOMAIN', get_realm_lc()),
+        'nbalias': os.getenv('NBALIAS', ''),
+        'nbdomain': os.getenv('NBDOMAIN'),
+        'ipaddress': os.getenv('IPADDRESS'),
+        'ipaddress_list': samba.ipaddress_list(skip_wg0=True),
+        'ipaddress_alterable': get_ipaddress_alterable(),
+        'hostname': get_hostname(),
+    }
+    json.dump(config, fp=sys.stdout)
 
-config = {
-    'realm': realm,
-    'nbdomain': os.getenv('NBDOMAIN'),
-    'ipaddress': os.getenv('IPADDRESS'),
-    'hostname': os.getenv('HOSTNAME')
-}
+def get_configuration_required():
+    if not os.getenv('REALM'):
+        return True
+    if not os.getenv('IPADDRESS'):
+        return True
+    return False
 
-json.dump(config, fp=sys.stdout)
+def get_ipaddress_alterable():
+    if not os.getenv("REALM"):
+        return True
+    if os.getenv("SERVER_ROLE") == "member":
+        return True
+    try:
+        # Raise an exception if a DC for REALM does not exist:
+        samba.get_joinaddress()
+    except samba.SambaException:
+        return True # No other DCs found, IP can be changed as wanted.
+    return False
+
+def get_realm_lc():
+    try:
+        return os.environ["REALM"].lower()
+    except KeyError:
+        return None
+
+def get_hostname():
+    hostname = os.getenv('HOSTNAME', os.environ['MODULE_ID'].replace('samba', 'fs'))
+    return hostname.split('.', 1)[0] # return short hostname
+
+if __name__ == "__main__":
+    main()

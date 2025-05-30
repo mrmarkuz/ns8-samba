@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2025 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import agent
+import json
+import sys
+import os
+import subprocess
+import samba
+
+def main():
+    request = json.load(sys.stdin)
+    if 'ipaddress' in request and os.getenv('IPADDRESS') != request['ipaddress']:
+        available_values = { el['ipaddress'] for el in samba.ipaddress_list(skip_wg0=True) }
+        if not request['ipaddress'] in available_values:
+            agent.set_status('validation-failed')
+            json.dump([{"field":"ipaddress","parameter":"ipaddress","value": request['ipaddress'],"error":"ipaddress_avail_check_failed"}], fp=sys.stdout)
+            sys.exit(3)
+        samba.validate_ipaddress(request['ipaddress']) # Check the IP is free, exit if not.
+
+    if os.getenv("SERVER_ROLE") == "member":
+        credentials_required(request)
+
+    changed = [] # record True/False return values
+    if 'nbalias' in request:
+        changed.append(set_nbalias(request))
+
+    if 'ipaddress' in request:
+        changed.append(set_ipaddress(request))
+
+    if any(changed):
+        agent.run_helper('systemctl', '--user', 'try-restart', 'samba-dc')
+
+def credentials_required(request):
+    if not 'adminpass' in request or not 'adminuser' in request:
+        agent.set_status('validation-failed')
+        json.dump([{"field":"adminuser","parameter":"adminuser","value": "","error":"credentials_required"}], fp=sys.stdout)
+        sys.exit(5)
+
+def get_script_member(new_nbalias, old_nbalias, adminuser):
+    shostname = os.environ["HOSTNAME"].split(".", 1)[0]
+    ipaddress = os.environ['IPADDRESS']
+    realm = os.environ['REALM'].lower()
+    return f"""
+    set -e
+    kinit "${{ADMINUSER}}" || exit 33
+    trap kdestroy EXIT
+    [ -n "{new_nbalias}" ] && net ads setspn add "{shostname}" "HOST/{new_nbalias.upper()}"
+    [ -n "{new_nbalias}" ] && net ads setspn add "{shostname}" "HOST/{new_nbalias.lower()}.{realm}"
+    [ -n "{old_nbalias}" ] && net ads setspn delete "{shostname}" "HOST/{old_nbalias.upper()}" || :
+    [ -n "{old_nbalias}" ] && net ads setspn delete "{shostname}" "HOST/{old_nbalias.lower()}.{realm}" || :
+    dcname="$(net ads lookup | awk '/^Domain Controller:/ {{ print $3 }}')"
+    [ -n "{new_nbalias}" ] && samba-tool dns add $dcname "{realm}" {new_nbalias.lower()} CNAME "{os.environ['HOSTNAME']}" || :
+    [ -n "{old_nbalias}" ] && samba-tool dns delete $dcname "{realm}" {old_nbalias.lower()} CNAME "{os.environ['HOSTNAME']}" || :
+    """
+
+def get_script_dc(new_nbalias, old_nbalias):
+    realm = os.environ['REALM'].lower()
+    ipaddress = os.environ['IPADDRESS']
+    shostname = os.environ["HOSTNAME"].split(".", 1)[0]
+    return f"""
+    [ -n "{new_nbalias}" ] && samba-tool spn add "HOST/{new_nbalias.upper()}" "{shostname}$"
+    [ -n "{new_nbalias}" ] && samba-tool spn add "HOST/{new_nbalias.lower()}.{realm}" "{shostname}$"
+    [ -n "{old_nbalias}" ] && samba-tool spn delete "HOST/{old_nbalias.upper()}" "{shostname}$" || :
+    [ -n "{old_nbalias}" ] && samba-tool spn delete "HOST/{old_nbalias.lower()}.{realm}" "{shostname}$" || :
+    [ -n "{new_nbalias}" ] && samba-tool dns add 127.0.0.1 "{realm}" {new_nbalias.lower()} CNAME "{os.environ['HOSTNAME']}" -P || :
+    [ -n "{old_nbalias}" ] && samba-tool dns delete 127.0.0.1 "{realm}" {old_nbalias.lower()} CNAME "{os.environ['HOSTNAME']}" -P || :
+    """
+
+def set_nbalias(request):
+    new_nbalias = request['nbalias']
+    old_nbalias = os.getenv('NBALIAS', '')
+    if new_nbalias == old_nbalias:
+        return False
+    # Bash script to run in samba-dc container
+    if os.getenv("SERVER_ROLE") == "member":
+        adminuser = request['adminuser']
+        setspn_script = get_script_member(new_nbalias, old_nbalias, adminuser)
+        script_input = request['adminpass'] + "\n"
+    else:
+        setspn_script = get_script_dc(new_nbalias, old_nbalias)
+        script_input = None
+        adminuser = ""
+    proc = subprocess.run(
+        ["podman", "exec", "-i", "--env=ADMINUSER="+adminuser, "samba-dc", "bash", "-c", setspn_script],
+        text=True,
+        input=script_input,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    handle_script_returncode(proc, adminuser, new_nbalias)
+    agent.set_env('NBALIAS', new_nbalias)
+    return True
+
+def handle_script_returncode(proc, adminuser, new_nbalias):
+    print(proc.stdout, file=sys.stderr)
+    if proc.returncode == 33:
+        agent.set_status('validation-failed')
+        json.dump([{"field":"adminuser","parameter":"adminuser","value": adminuser,"error":"invalid_credentials"}], fp=sys.stdout)
+        sys.exit(33)
+    elif proc.returncode != 0 and 'Insufficient access' in proc.stdout:
+        agent.set_status('validation-failed')
+        json.dump([{"field":"adminuser","parameter":"adminuser","value": adminuser,"error":"insufficient_permissions"}], fp=sys.stdout)
+        sys.exit(34)
+    elif proc.returncode != 0 and (
+        'already affected to another user' in proc.stdout or
+        'would cause a conflict' in proc.stdout):
+        agent.set_status('validation-failed')
+        json.dump([{"field":"nbalias","parameter":"nbalias","value": new_nbalias,"error":"nbalias_conflict"}], fp=sys.stdout)
+        sys.exit(35)
+    elif proc.returncode != 0:
+        sys.exit(proc.returncode)
+
+def set_ipaddress(request):
+    if os.getenv('IPADDRESS') == request['ipaddress']:
+        return False
+    # Ensure file_server flag is present because we are binding a LAN IP address:
+    with agent.redis_connect(privileged=True) as prdb:
+        prdb.sadd(f"module/{os.environ['MODULE_ID']}/flags", "file_server")
+    new_ipaddress = request['ipaddress']
+    old_ipaddress = os.getenv('IPADDRESS', '')
+    realm = os.environ['REALM'].lower()
+    shostname = os.environ["HOSTNAME"].split(".", 1)[0]
+    if os.getenv("SERVER_ROLE") == "member":
+        # Update the DNS record of the File Server domain member
+        dns_script = f"""
+        set -e
+        kinit "${{ADMINUSER}}" || exit 33
+        trap kdestroy EXIT
+        dcname="$(net ads lookup | awk '/^Domain Controller:/ {{ print $3 }}')"
+        [ -n "{old_ipaddress}" ] && samba-tool dns delete $dcname "{realm}" "{shostname}" A "{old_ipaddress}" || :
+        samba-tool dns add $dcname "{realm}" "{shostname}" A "{new_ipaddress}" || :
+        """
+        adminuser = request['adminuser']
+        script_input = request['adminpass'] + "\n"
+        proc = subprocess.run(
+            ["podman", "exec", "-i", "--env=ADMINUSER="+adminuser, "samba-dc", "bash", "-c", dns_script],
+            text=True,
+            input=script_input,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        handle_script_returncode(proc, adminuser, "")
+    agent.set_env('IPADDRESS', request['ipaddress'])
+    return True
+
+if __name__ == "__main__":
+    main()

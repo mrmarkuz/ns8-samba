@@ -8,6 +8,7 @@
 import sys
 import json
 import agent
+import samba
 
 podman_exec = ["podman", "exec", "samba-dc"]
 
@@ -40,3 +41,20 @@ elif phelper.returncode == 3:
     sys.exit(3)
 else:
     phelper.check_returncode()
+
+if 'enable_audit' in request:
+    samba.configure_samba_audit(
+        request['name'],
+        request['enable_audit'],
+        request.get('log_failed_events', False))
+
+if 'enable_recycle' in request:
+    samba.configure_recycle(
+        request['name'],
+        request['enable_recycle'],
+        request.get('recycle_retention', 0))
+
+if 'browseable' in request:
+    samba.configure_browseable(
+        request['name'],
+        request['browseable'])

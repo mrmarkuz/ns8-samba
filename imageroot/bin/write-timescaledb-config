@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2025 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+if [ -f timescaledb.env ] ; then
+    exit 0
+fi
+
+function gen_password()
+{
+    tr -dc A-Za-z0-9 </dev/urandom 2>/dev/null | head -c 15
+}
+
+umask 022
+
+printf "POSTGRES_PASSWORD=%s\n" "$(gen_password)" >>timescaledb.env
+printf "SAMBA_AUDIT_PASSWORD=%s\n" "$(gen_password)" >>timescaledb.env

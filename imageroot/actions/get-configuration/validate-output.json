@@ -6,19 +6,45 @@
     "examples": [],
     "type": "object",
     "required": [
+        "configuration_required",
         "realm",
+        "domain",
         "nbdomain",
         "hostname",
-        "ipaddress"
+        "ipaddress",
+        "ipaddress_list",
+        "ipaddress_alterable",
+        "credentials_required"
     ],
     "properties": {
+        "configuration_required": {
+            "type": "boolean",
+            "description": "True if action set-configuration must be called to finish the configuration and start the Samba services"
+        },
+        "credentials_required": {
+            "type": "boolean",
+            "description": "True if calling set-configuration requires admin credentials"
+        },
         "realm": {
             "type": [
                 "string",
                 "null"
             ],
-            "title": "Domain name (realm)",
-            "minLength": 1
+            "title": "AD Domain/Realm name"
+        },
+        "domain": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "User domain name"
+        },
+        "nbalias": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Server alias name"
         },
         "nbdomain": {
             "type": [
@@ -35,6 +61,24 @@
             ],
             "title": "DC host name",
             "minLength": 1
+        },
+        "ipaddress_list": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string"
+                    },
+                    "ipaddress": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "ipaddress_alterable": {
+            "type": "boolean",
+            "description": "True if ipaddress can be changed with set-configuration"
         },
         "ipaddress": {
             "type": [

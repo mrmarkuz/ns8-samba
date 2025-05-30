@@ -20,16 +20,33 @@
 # along with NethServer.  If not, see COPYING.
 #
 
+set -e
+
 echo "Dumping Samba DC state to disk:"
 podman exec -w /var/lib/samba -i samba-dc bash -s <<'EOF'
 set -e
 rm -rvf backup
-samba-tool domain backup offline --targetdir=backup
+if [[ "${SERVER_ROLE}" == "member" ]] ; then
+    find . -type f -name "*.tdb" \
+        -not -name netlogon_creds_cli.tdb \
+        -not -name winbindd_cache.tdb | xargs -- tdbbackup -s .bak
+    mkdir -vp backup
+    tar -c -f backup/samba-backup.tar.bz2 -v --remove-files --files-from=<(find . -type f -name "*.bak")
+else
+    samba-tool domain backup offline --targetdir=backup
+    mv -v backup/samba-backup-*.tar.bz2 backup/samba-backup.tar.bz2
+fi
 cd backup
-mv -v samba-backup-*.tar.bz2 samba-backup.tar.bz2
 echo "Adding indexes of share contents:"
 while read -r share ; do
     updatedb -o "${share}.plocate" -U "${SAMBA_SHARES_DIR}/${share}"
     ls -s "${share}.plocate"
 done < <(net conf listshares)
 EOF
+
+#
+# TimescaleDB backup, see
+# https://docs.timescale.com/self-hosted/latest/backup-and-restore/logical-backup/#back-up-and-restore-an-entire-database
+#
+echo "Dumping samba_audit DB from TimescaleDB to disk:"
+podman exec -u postgres timescaledb pg_dump -p 15432 -d samba_audit -Fc -Z 5 > samba_audit.pgdump

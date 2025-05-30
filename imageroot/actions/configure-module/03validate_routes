@@ -26,6 +26,7 @@ import sys
 import os
 import dns.resolver
 import cluster.userdomains
+import samba
 
 agent.set_weight(os.path.basename(__file__), 0) # Validation step, no task progress at all
 
@@ -33,8 +34,7 @@ request = json.load(sys.stdin)
 realm = request['realm'].lower()
 ipaddress = request['ipaddress']
 hostname = request['hostname'] # verify the given hostname is not in use
-
-rsv = dns.resolver.Resolver(configure=False)
+nameservers = []
 
 # Lookup a DC for the given realm
 with agent.redis_connect() as rdb:
@@ -45,37 +45,11 @@ with agent.redis_connect() as rdb:
                 agent.set_status('validation-failed')
                 json.dump([{"parameter": "ipaddress", "field":"ipaddress", "value": ipaddress, "error": "ipaddress_dc_conflict_check_failed"}], fp=sys.stdout)
                 sys.exit(5)
-
             if provider['host']:
-                rsv.nameservers.append(provider['host'])
+                nameservers.append(provider['host'])
 
-if not rsv.nameservers:
+if not nameservers:
     # There are no DCs for the given realm. Nothing to do.
-    print(f"New Active Directory domain {realm}: no changes needed to IP routing configuration.", file=sys.stderr)
-    sys.exit(0)
-
-try:
-    resolve_ret = rsv.resolve(realm)
-    print("DNS nameserver", resolve_ret.nameserver, file=sys.stderr)
-    print("DNS authority", resolve_ret.response.authority, file=sys.stderr)
-    print("Domain", resolve_ret.rrset.to_text(), file=sys.stderr)
-except dns.resolver.NoAnswer:
-    json.dump([{"field": "realm", "parameter": "realm", "value": realm, "error": "realm_dc_avail_check_failed"}], fp=sys.stdout)
-    agent.set_status('validation-failed')
-    sys.exit(6)
-except dns.exception.Timeout:
-    json.dump([{"field": "realm", "parameter": "realm", "value": realm, "error": "realm_dc_reachable_check_failed"}], fp=sys.stdout)
-    agent.set_status('validation-failed')
-    sys.exit(7)
-
-#
-# Check if the hostname is already registered in the DNS
-#
-try:
-    hostname_resolve_ret = rsv.resolve(hostname + '.' + realm)
-    print(agent.SD_ERR + f"DC hostname {hostname} is already in DNS!", hostname_resolve_ret.rrset.to_text(), file=sys.stderr)
-    json.dump([{"field": "hostname", "parameter": "hostname", "value": hostname, "error": "hostname_check_failed"}], fp=sys.stdout)
-    agent.set_status('validation-failed')
-    sys.exit(11)
-except dns.resolver.NXDOMAIN:
-    pass
+    print(f"Active Directory domain {realm}: no changes needed to IP routing configuration.", file=sys.stderr)
+else:
+    samba.validate_hostname(hostname, realm, nameservers)

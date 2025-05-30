@@ -9,7 +9,6 @@
     ],
     "anyOf": [
         {
-            "type": "object",
             "properties": {
                 "provision": {
                     "const": "new-domain"
@@ -17,14 +16,15 @@
             }
         },
         {
-            "type": "object",
             "required": [
-                "provision",
                 "realm"
             ],
             "properties": {
                 "provision": {
-                    "const": "join-domain"
+                    "enum": [
+                        "join-domain",
+                        "join-member"
+                    ]
                 }
             }
         }

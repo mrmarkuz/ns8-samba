@@ -30,13 +30,17 @@ EOF
 
 cat - > /etc/hosts <<EOF
 127.0.0.1     localhost.localdomain localhost
-${IPADDRESS}     ${HOSTNAME}
+${IPADDRESS}     ${HOSTNAME} ${HOSTNAME%%.*}
 EOF
 
 cat - > /etc/resolv.conf <<EOF
 search ${REALM,,}
-nameserver ${IPADDRESS}
+nameserver ${DNS1ADDRESS:-${IPADDRESS}}
 EOF
+# Secondary DNS resolver for member role
+if [[ -n "${DNS1ADDRESS}" ]] && [[ -n "${DNS2ADDRESS}" ]] ; then
+    echo "nameserver = ${DNS2ADDRESS}" >> /etc/resolv.conf
+fi
 
 nbname=$(hostname -s)
 mkdir -vp "/var/lib/samba/sysvol/${REALM,,}/scripts"
@@ -47,20 +51,46 @@ cat - >/etc/samba/smb.conf <<EOF
         bind interfaces only = Yes
         interfaces = 127.0.0.1 ${IPADDRESS}${PREFIXLEN:+/}${PREFIXLEN}
         netbios name = ${nbname^^}
+        netbios aliases = ${NBALIAS}
         realm = ${REALM^^}
-        server role = active directory domain controller
         workgroup = ${NBDOMAIN}
         log level = ${SAMBA_LOGLEVEL:-1}
-
         acl_xattr:security_acl_name = user.NTACL
         acl_xattr:ignore system acls = yes
-
         template homedir = ${SAMBA_HOMES_DIR:?}/%U
         obey pam restrictions = yes
-
         registry shares = yes
         inherit owner = yes
+        full_audit:prefix = %R|%I|%u|%S
+        full_audit:facility = LOCAL7
+        full_audit:priority = INFO
+        full_audit:success = none
+        full_audit:failure = none
+        recycle:repository =
+        recycle:keeptree = yes
+        recycle:versions = yes
 
+EOF
+
+if [[ "${SERVER_ROLE}" == "member" ]] ; then
+cat - >>/etc/samba/smb.conf <<ROLEMEMBER
+        vfs objects = acl_xattr recycle full_audit
+        winbind use default domain = yes
+        idmap config * : backend = tdb
+        idmap config * : range = 1001-1999
+        idmap config ${NBDOMAIN} : backend = rid
+        idmap config ${NBDOMAIN} : range = 2000-65500
+        # Note: Add idmap ranges for trusted domains to include.conf
+        #       Check /proc/self/uid_map and uid of nobody for range
+        #       upper bound
+        server role = member server
+        include = /etc/samba/include.conf
+
+ROLEMEMBER
+else
+cat - >>/etc/samba/smb.conf <<ROLEDC
+        vfs objects = dfs_samba4 acl_xattr recycle full_audit
+        server role = active directory domain controller
         include = /etc/samba/include.conf
 
 [sysvol]
@@ -68,11 +98,14 @@ cat - >/etc/samba/smb.conf <<EOF
         read only = No
         acl_xattr:ignore system acls = no
         inherit owner = no
-
 [netlogon]
         path = /var/lib/samba/sysvol/${REALM,,}/scripts
         read only = No
 
+ROLEDC
+fi
+
+cat - >>/etc/samba/smb.conf <<EOF
 [homes]
 comment = %u home directory
 browseable = no

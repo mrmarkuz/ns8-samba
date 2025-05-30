@@ -42,7 +42,10 @@
         {
             "properties": {
                 "provision": {
-                    "const": "join-domain"
+                    "enum": [
+                        "join-domain",
+                        "join-member"
+                    ]
                 }
             },
             "required": [
@@ -74,11 +77,18 @@
         "hostname": {
             "type": "string",
             "pattern": "^[a-zA-Z][-a-zA-Z0-9]*$",
+            "description": "Short host/computer name for the AD machine account",
+            "maxLength": 15
+        },
+        "nbalias": {
+            "type": "string",
+            "pattern": "^([a-zA-Z][-a-zA-Z0-9]*)?$",
+            "description": "Server alias name to access shared folders. An empty string removes the alias.",
             "maxLength": 15
         },
         "realm": {
             "type": "string",
-            "title": "Domain name",
+            "description": "AD Domain/Realm and NS8 User Domain name",
             "pattern": "^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$",
             "maxLength": 140,
             "minLength": 1

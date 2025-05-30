@@ -1,0 +1,30 @@
+[Unit]
+Description=TimescaleDB for Samba Audit logs
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=%S/state/environment
+WorkingDirectory=%S/state
+Restart=always
+TimeoutStopSec=70
+ExecStartPre=/bin/rm -f %t/%N.pid %t/%N.cid
+ExecStartPre=runagent write-timescaledb-config
+ExecStart=/usr/bin/podman run \
+    --conmon-pidfile %t/%N.pid \
+    --cidfile %t/%N.cid \
+    --cgroups=no-conmon \
+    --detach \
+    --network=host \
+    --replace --name %N \
+    --env=POSTGRES_DB=samba_audit \
+    --env=PGPORT=15432 \
+    --volume=%S/timescaledb-initdb.d:/docker-entrypoint-initdb.d:z \
+    --volume=timescaledb:/var/lib/postgresql/data:z \
+    --env-file=timescaledb.env \
+    ${TIMESCALEDB_IMAGE}
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%N.cid -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%N.cid
+
+PIDFile=%t/%N.pid
+Type=forking
+

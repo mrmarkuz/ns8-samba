@@ -28,25 +28,46 @@
             @click="showCreateSharedFolderModal"
             >{{ $t("shares.create_shared_folder") }}
           </NsButton>
+          <NsButton
+            kind="tertiary"
+            @click="showAccessSharesInfoModal"
+            class="mg-left-md"
+          >
+            {{ $t("shares.how_to_access_shared_folders") }}
+          </NsButton>
         </cv-column>
       </cv-row>
-      <cv-row v-if="loading.listShares">
-        <cv-column v-for="index in 4" :key="index" :md="4" :max="4">
-          <cv-tile light>
-            <cv-skeleton-text
-              :paragraph="true"
-              :line-count="6"
-              heading
-            ></cv-skeleton-text>
-          </cv-tile>
-        </cv-column>
-      </cv-row>
-      <template v-else>
-        <!-- shares loaded -->
-        <cv-row v-if="!shares.length">
-          <!-- empty state -->
-          <cv-column>
-            <cv-tile light>
+      <cv-row>
+        <!-- shares table -->
+        <cv-column>
+          <NsDataTable
+            :allRows="shares"
+            :columns="i18nTableColumns"
+            :rawColumns="tableColumns"
+            :sortable="true"
+            :pageSizes="[10, 25, 50, 100]"
+            :overflow-menu="true"
+            isSearchable
+            :searchPlaceholder="$t('shares.search_folder')"
+            :searchClearLabel="core.$t('common.clear_search')"
+            :noSearchResultsLabel="core.$t('common.no_search_results')"
+            :noSearchResultsDescription="
+              core.$t('common.no_search_results_description')
+            "
+            :isLoading="loading.listShares"
+            :skeletonRows="5"
+            :isErrorShown="!!error.listShares"
+            :errorTitle="$t('action.list-shares')"
+            :errorDescription="error.listShares"
+            :itemsPerPageLabel="core.$t('pagination.items_per_page')"
+            :rangeOfTotalItemsLabel="core.$t('pagination.range_of_total_items')"
+            :ofTotalPagesLabel="core.$t('pagination.of_total_pages')"
+            :backwardText="core.$t('pagination.previous_page')"
+            :forwardText="core.$t('pagination.next_page')"
+            :pageNumberLabel="core.$t('pagination.page_number')"
+            @updatePage="tablePage = $event"
+          >
+            <template slot="empty-state">
               <NsEmptyState :title="$t('shares.no_shares')">
                 <template #pictogram>
                   <FolderPictogram />
@@ -61,73 +82,67 @@
                   >
                 </template>
               </NsEmptyState>
-            </cv-tile>
-          </cv-column>
-        </cv-row>
-        <cv-row v-else>
-          <!-- shares list -->
-          <cv-column v-for="share in shares" :key="share.name" :md="4" :max="4">
-            <NsInfoCard light :title="share.name" :icon="FolderShared32">
-              <template #menu>
-                <cv-overflow-menu
-                  :flip-menu="true"
-                  tip-position="top"
-                  tip-alignment="end"
-                  class="top-right-overflow-menu"
+            </template>
+            <template slot="data">
+              <cv-data-table-row
+                v-for="(row, rowIndex) in tablePage"
+                :key="`${rowIndex}`"
+                :value="`${rowIndex}`"
+              >
+                <cv-data-table-cell>
+                  <span>{{ row.name }}</span>
+                </cv-data-table-cell>
+                <cv-data-table-cell>
+                  {{ row.description || "-" }}
+                </cv-data-table-cell>
+                <cv-data-table-cell
+                  class="table-overflow-menu-cell actions-column"
                 >
-                  <cv-overflow-menu-item
-                    @click="showEditDescriptionModal(share)"
-                  >
-                    <NsMenuItem
-                      :icon="Edit20"
-                      :label="$t('shares.edit_description')"
-                    />
-                  </cv-overflow-menu-item>
-                  <cv-overflow-menu-item
-                    @click="showSetPermissionsModal(share)"
-                  >
-                    <NsMenuItem
-                      :icon="Locked20"
-                      :label="$t('shares.set_permissions')"
-                    />
-                  </cv-overflow-menu-item>
-                  <cv-overflow-menu-item @click="showRestoreFileModal(share)">
-                    <NsMenuItem
-                      :icon="RecentlyViewed20"
-                      :label="$t('shares.restore_file_or_folder')"
-                    />
-                  </cv-overflow-menu-item>
-                  <cv-overflow-menu-item
-                    danger
-                    @click="showDeleteShareModal(share)"
-                  >
-                    <NsMenuItem
-                      :icon="TrashCan20"
-                      :label="core.$t('common.delete')"
-                    />
-                  </cv-overflow-menu-item>
-                </cv-overflow-menu>
-              </template>
-              <template #content>
-                <div class="share-card-content">
-                  <div v-if="share.description" class="row description">
-                    <span>{{ share.description }}</span>
-                  </div>
-                  <div class="row">
-                    <NsButton
-                      kind="ghost"
-                      :icon="ArrowRight20"
-                      @click="showAclsModal(share)"
+                  <NsButton
+                    kind="ghost"
+                    @click="showAclsModal(row)"
+                    class="mg-right-25"
+                    >{{ $t("shares.show_acls") }}
+                  </NsButton>
+                  <cv-overflow-menu flip-menu class="table-overflow-menu">
+                    <cv-overflow-menu-item
+                      @click="showEditDescriptionModal(row)"
                     >
-                      {{ $t("shares.show_acls") }}
-                    </NsButton>
-                  </div>
-                </div>
-              </template>
-            </NsInfoCard>
-          </cv-column>
-        </cv-row>
-      </template>
+                      <NsMenuItem
+                        :icon="Edit20"
+                        :label="$t('shares.edit_description')"
+                      />
+                    </cv-overflow-menu-item>
+                    <cv-overflow-menu-item
+                      @click="showSetPermissionsModal(row)"
+                    >
+                      <NsMenuItem
+                        :icon="Locked20"
+                        :label="$t('shares.set_permissions')"
+                      />
+                    </cv-overflow-menu-item>
+                    <cv-overflow-menu-item @click="showRestoreFileModal(row)">
+                      <NsMenuItem
+                        :icon="RecentlyViewed20"
+                        :label="$t('shares.restore_file_or_folder')"
+                      />
+                    </cv-overflow-menu-item>
+                    <cv-overflow-menu-item
+                      danger
+                      @click="showDeleteShareModal(row)"
+                    >
+                      <NsMenuItem
+                        :icon="TrashCan20"
+                        :label="core.$t('common.delete')"
+                      />
+                    </cv-overflow-menu-item>
+                  </cv-overflow-menu>
+                </cv-data-table-cell>
+              </cv-data-table-row>
+            </template>
+          </NsDataTable>
+        </cv-column>
+      </cv-row>
     </cv-grid>
     <!-- create shared folder modal -->
     <CreateSharedFolderModal
@@ -188,6 +203,11 @@
       @hide="hideDeleteShareModal"
       @confirmDelete="removeShare"
     />
+    <!-- access shares info modal -->
+    <AccessSharesInfoModal
+      :isShown="isShownAccessSharesInfoModal"
+      @hide="hideAccessSharesInfoModal"
+    />
   </div>
 </template>
 
@@ -205,6 +225,7 @@ import CreateSharedFolderModal from "@/components/shared-folders/CreateSharedFol
 import EditDescriptionModal from "@/components/shared-folders/EditDescriptionModal.vue";
 import ShowAclsModal from "@/components/shared-folders/ShowAclsModal.vue";
 import SetPermissionsModal from "@/components/shared-folders/SetPermissionsModal.vue";
+import AccessSharesInfoModal from "@/components/shared-folders/AccessSharesInfoModal.vue";
 import RecentlyViewed20 from "@carbon/icons-vue/es/recently-viewed/20";
 import RestoreFileModal from "@/components/shared-folders/RestoreFileModal.vue";
 
@@ -216,6 +237,7 @@ export default {
     ShowAclsModal,
     SetPermissionsModal,
     RestoreFileModal,
+    AccessSharesInfoModal,
   },
   mixins: [
     TaskService,
@@ -240,8 +262,11 @@ export default {
       isShownSetPermissionsModal: false,
       isShownRestoreFileModal: false,
       isShownDeleteShareModal: false,
+      isShownAccessSharesInfoModal: false,
       currentShare: null,
       RecentlyViewed20,
+      tableColumns: ["name", "description"],
+      tablePage: [],
       loading: {
         listShares: false,
         removeShare: false,
@@ -254,6 +279,11 @@ export default {
   },
   computed: {
     ...mapState(["instanceName", "core", "appName"]),
+    i18nTableColumns() {
+      return this.tableColumns.map((column) => {
+        return this.$t("shares.column_" + column);
+      });
+    },
   },
   beforeRouteEnter(to, from, next) {
     next((vm) => {
@@ -320,6 +350,12 @@ export default {
     },
     hideCreateSharedFolderModal() {
       this.isShownCreateSharedFolderModal = false;
+    },
+    showAccessSharesInfoModal() {
+      this.isShownAccessSharesInfoModal = true;
+    },
+    hideAccessSharesInfoModal() {
+      this.isShownAccessSharesInfoModal = false;
     },
     onShareCreated() {
       this.listShares();
@@ -469,5 +505,14 @@ export default {
 
 .description {
   color: $text-02;
+}
+
+.actions-column {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mg-right-25 {
+  margin-right: 2.5rem;
 }
 </style>

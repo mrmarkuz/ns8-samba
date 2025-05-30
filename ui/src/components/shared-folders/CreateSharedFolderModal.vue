@@ -325,7 +325,7 @@ export default {
         this.createClusterTaskForApp({
           action: taskAction,
           data: {
-            domain: this.configuration.realm,
+            domain: this.configuration.domain,
           },
           extra: {
             title: this.$t("action." + taskAction),
