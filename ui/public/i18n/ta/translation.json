@@ -7,7 +7,9 @@
         "next": "Next",
         "previous": "Previous",
         "save": "Save",
-        "close": "Close"
+        "close": "Close",
+        "optional": "optional",
+        "loading": "Loading"
     },
     "action": {
         "list-backup-repositories": "List backup repositories",
@@ -26,7 +28,9 @@
         "list-domain-groups": "List domain groups",
         "reset-share-acls": "Set shared folder permissions",
         "add-share": "Create shared folder",
-        "remove-share": "Delete shared folder"
+        "remove-share": "Delete shared folder",
+        "list-user-domains": "List user domains",
+        "set-configuration": "Set configuration"
     },
     "error": {
         "403": "Operation not authorized",
@@ -38,7 +42,19 @@
         "network_timeout": "Network timeout",
         "404": "Resource not found",
         "network_error": "Network error",
-        "validation_error": "Validation error"
+        "validation_error": "Validation error",
+        "insufficient_permissions": "Insufficient permissions",
+        "incorrect_username_or_password": "Incorrect username or password",
+        "hostname_check_failed": "File server name already in use",
+        "hostname_string_lte": "Must be less than or equal to 15 characters",
+        "invalid_credentials": "Invalid credentials",
+        "hostname_pattern": "Only alphanumeric characters and hyphens are allowed",
+        "ipaddress_format": "Invalid IP address",
+        "ipaddress_private_check_failed": "IP address must be private",
+        "ipaddress_bind_check_failed": "IP address already in use",
+        "ipaddress_avail_check_failed": "IP address not available",
+        "nbalias_pattern": "Only alphanumeric characters and hyphens are allowed",
+        "nbalias_conflict": "File server alias already in use"
     },
     "status": {
         "created": "Created",
@@ -57,9 +73,9 @@
         "no_volumes": "No volumes",
         "shared_folders": "Shared folders",
         "go_to_shared_folders": "Go to Shared folders",
-        "domain": "Domain",
         "general": "General",
-        "go_to_domains_and_users": "Go to Domains and users"
+        "go_to_domains_and_users": "Go to Domains and users",
+        "go_to_settings": "Go to Settings"
     },
     "about": {
         "title": "About"
@@ -118,12 +134,59 @@
         "create_shared_folder_name": "Create shared folder {name}",
         "erw_description": "Everyone can read and write",
         "select_backup_destination": "Select backup destination",
-        "create_shared_folder": "Create shared folder"
+        "create_shared_folder": "Create shared folder",
+        "acl_short_special": "Special",
+        "column_description": "Description",
+        "username_format_examples": "Username format examples",
+        "network_path_examples": "Network path example | Network path examples",
+        "how_to_access_shared_folders_description": "Help users connect to shared folders with the correct path and login format.",
+        "search_folder": "Search folder",
+        "acl_short_rw": "RW",
+        "how_to_access_shared_folders": "How to access shared folders",
+        "acl_short_full": "Full access",
+        "acl_short_ro": "RO",
+        "column_name": "Folder name"
     },
     "ns_combo_search_box": {
         "placeholder": "Search",
         "clear_search": "Clear search",
         "results_limit_reached": "Keep typing to show more options",
         "no_results": "No results"
+    },
+    "software_center": {
+        "source_package": "App image"
+    },
+    "settings": {
+        "file_server_ip_address": "File server IP address",
+        "not_set": "(not set)",
+        "netbios_domain_name": "NetBIOS domain name",
+        "configure_instance": "Configure {instance}",
+        "file_server_name": "File server name",
+        "ad_admin_password": "AD admin password",
+        "save_settings": "Save settings",
+        "invalid_credentials_description": "Authentication failed. Credentials for a user in the 'Domain Admins' group are required.",
+        "file_server_alias_tooltip": "Alternative name for the computer, used in network paths to access shared folders. It must be unique in the AD network. Can be up to 15 characters long.",
+        "file_server_ip_address_tooltip": "IP address to associate with the file server in the Active Directory domain. This cannot be changed if Samba is also a domain provider and other domain providers exist in the same domain.",
+        "file_server_alias": "File server alias",
+        "ad_admin_username": "AD admin username",
+        "domain": "Domain",
+        "file_server_name_tooltip": "Unique name for the Active Directory computer account. It will appear in DNS and cannot be changed.",
+        "title": "Settings",
+        "credentials_required_description": "Saving changes requires the credentials of a user in the 'Domain Admins' group."
+    },
+    "welcome": {
+        "create_file_server": "Create file server",
+        "go_to_domains_and_users": "Go to Domains and users",
+        "title": "Welcome to Samba",
+        "no_domain_configured_description": "Please configure an Active Directory domain first",
+        "no_domain_configured": "No Active Directory domain configured",
+        "choose_domain": "Choose domain",
+        "step_settings_description": "Configure the file server identity within the Active Directory domain.",
+        "choose_ip_address": "Choose IP address",
+        "step_credentials_description": "Enter the credentials of a user in the 'Domain Admins' group.",
+        "file_server_alias_tooltip": "Alternative name for the computer, used in network paths to access shared folders. It must be unique in the AD network and can be changed later. Can be up to 15 characters long.",
+        "file_server_ip_address_tooltip": "IP address to associate with the file server in the Active Directory domain. This cannot be changed later if Samba is also a domain provider and other domain providers exist in the same domain.",
+        "file_server_name_tooltip": "Unique name for the Active Directory computer account, can be up to 15 characters long. It will appear in DNS and cannot be changed later.",
+        "step_domain_description": "Select the Active Directory domain you want to join as a member."
     }
 }
