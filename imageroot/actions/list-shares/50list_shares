@@ -106,6 +106,7 @@ for share_name in filter(None, psharenames.stdout.split("\n")):
         "enable_recycle": enable_recycle,
         "recycle_retention": recycle_retention,
         "acls": read_acls(share_name),
+        "browseable": ocfg[share_name].get("browseable", "yes") != "no",
     })
 
 json.dump(list_shares, fp=sys.stdout)
