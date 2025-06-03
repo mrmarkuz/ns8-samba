@@ -41,3 +41,6 @@ samba-tool dns add 127.0.0.1 "$(hostname -d)" "${NBALIAS,,}" CNAME "$(hostname)"
 
 exit 0 # Force success
 EOF
+
+# Restart required to make NBALIAS work
+systemctl --user restart samba-dc.service
