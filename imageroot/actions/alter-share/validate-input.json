@@ -16,6 +16,7 @@
             "browseable": true,
             "description": "Second share",
             "enable_recycle": true,
+            "recycle_versions": true,
             "recycle_retention": 30
         },
         {
@@ -37,6 +38,11 @@
         "enable_recycle": {
             "type": "boolean",
             "description": "Enable the Recycle Bin for this network share."
+        },
+        "recycle_versions": {
+            "type": "boolean",
+            "default": false,
+            "description": "Keeps multiple versions of deleted files with the same name. If false, only the latest version is retained."
         },
         "recycle_retention": {
             "type": "integer",

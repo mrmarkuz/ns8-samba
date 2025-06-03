@@ -225,12 +225,17 @@ def configure_samba_audit(sharename, enable_audit=True, log_failed_events=False)
     agent.run_helper(*set_audit_cmd, stderr=subprocess.DEVNULL)
     agent.run_helper(*set_logfailed_cmd, stderr=subprocess.DEVNULL)
 
-def configure_recycle(sharename, enable_recycle=True, recycle_retention=0):
+def configure_recycle(sharename, enable_recycle=True, recycle_retention=0, recycle_versions=False):
     if enable_recycle:
         agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "setparm", sharename, "recycle:repository", os.getenv("RECYCLE_REPOSITORY", ".recycle"))
+        if recycle_versions:
+            agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "delparm", sharename, "recycle:versions")
+        else:
+            agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "setparm", sharename, "recycle:versions", "no")
         agent.run_helper("podman", "exec", "samba-dc", "recycle", "set_retention", sharename, str(recycle_retention))
     else:
         agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "delparm", sharename, "recycle:repository")
+        agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "delparm", sharename, "recycle:versions")
         agent.run_helper("podman", "exec", "samba-dc", "recycle", "del_retention", sharename)
 
 def configure_browseable(sharename, browseable=True):
