@@ -18,44 +18,65 @@
             "adminuser": "administrator",
             "adminpass": "Nethesis,1234",
             "realm": "AD.EXAMPLE.COM",
+            "ipaddress": "10.15.21.102",
+            "hostname": "dc2"
+        },
+        {
+            "provision": "join-member",
+            "adminuser": "admin",
+            "adminpass": "Nethesis,4321",
+            "realm": "domain.test",
             "ipaddress": "10.15.21.100",
-            "hostname": "dc1"
+            "hostname": "fs1"
         }
     ],
     "type": "object",
     "anyOf": [
         {
             "properties": {
+                "realm": {
+                    "description": "AD Domain/Realm and NS8 User Domain name",
+                    "pattern": "^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$",
+                    "maxLength": 140
+                },
                 "provision": {
                     "const": "new-domain"
                 }
             },
             "required": [
-                "hostname",
-                "adminuser",
-                "adminpass",
-                "realm",
-                "nbdomain",
-                "ipaddress"
+                "nbdomain"
             ]
         },
         {
             "properties": {
+                "realm": {
+                    "description": "AD Domain/Realm and NS8 User Domain name",
+                    "pattern": "^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$",
+                    "maxLength": 140
+                },
                 "provision": {
-                    "enum": [
-                        "join-domain",
-                        "join-member"
-                    ]
+                    "const": "join-domain"
                 }
-            },
-            "required": [
-                "hostname",
-                "adminuser",
-                "adminpass",
-                "realm",
-                "ipaddress"
-            ]
+            }
+        },
+        {
+            "properties": {
+                "realm": {
+                    "description": "A NS8 domain name to obtain the actual AD realm: relax the pattern",
+                    "pattern": ".+"
+                },
+                "provision": {
+                    "const": "join-member"
+                }
+            }
         }
+    ],
+    "required": [
+        "hostname",
+        "adminuser",
+        "adminpass",
+        "realm",
+        "ipaddress"
     ],
     "properties": {
         "provision": {
@@ -88,9 +109,6 @@
         },
         "realm": {
             "type": "string",
-            "description": "AD Domain/Realm and NS8 User Domain name",
-            "pattern": "^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$",
-            "maxLength": 140,
             "minLength": 1
         },
         "nbdomain": {
