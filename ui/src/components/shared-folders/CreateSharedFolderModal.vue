@@ -76,6 +76,158 @@
             :showCloseButton="false"
           />
         </div>
+        <!-- advanced options -->
+        <cv-accordion ref="accordion" class="mg-top-lg">
+          <cv-accordion-item :open="toggleAccordion[0]">
+            <template slot="title">{{ core.$t("common.advanced") }}</template>
+            <template slot="content">
+              <NsToggle
+                value="enable_audit"
+                :label="$t('shares.enable_audit')"
+                v-model="enable_audit"
+                :form-item="true"
+                :disabled="loading.addShare"
+                :error-message="error.enable_audit"
+                class="mg-bottom"
+                tooltipDirection="top"
+                tooltipAlignment="start"
+              >
+                <template slot="tooltip">
+                  <div>
+                    {{ $t("shares.enable_audit_tooltip") }}
+                  </div>
+                </template>
+                <template slot="text-left">{{
+                  $t("common.disabled")
+                }}</template>
+                <template slot="text-right">{{
+                  $t("common.enabled")
+                }}</template>
+              </NsToggle>
+              <NsToggle
+                v-if="enable_audit"
+                value="log_failed_events"
+                :label="$t('shares.log_failed_events')"
+                v-model="log_failed_events"
+                :form-item="true"
+                :disabled="loading.addShare"
+                :error-message="error.log_failed_events"
+                class="mg-bottom mg-left-md"
+              >
+                <template slot="text-left">{{
+                  $t("common.disabled")
+                }}</template>
+                <template slot="text-right">{{
+                  $t("common.enabled")
+                }}</template>
+              </NsToggle>
+              <NsToggle
+                value="browseable"
+                :label="$t('shares.browseable')"
+                v-model="browseable"
+                :form-item="true"
+                :disabled="loading.addShare"
+                :error-message="error.browseable"
+                class="mg-bottom"
+                tooltipDirection="top"
+                tooltipAlignment="start"
+              >
+                <template slot="tooltip">
+                  <div>
+                    {{ $t("shares.browseable_tooltip") }}
+                  </div>
+                </template>
+                <template slot="text-left">{{
+                  $t("common.disabled")
+                }}</template>
+                <template slot="text-right">{{
+                  $t("common.enabled")
+                }}</template>
+              </NsToggle>
+              <NsToggle
+                value="enable_recycle"
+                :label="$t('shares.enable_recycle')"
+                v-model="enable_recycle"
+                :form-item="true"
+                :disabled="loading.addShare"
+                :error-message="error.enable_recycle"
+                class="mg-bottom"
+                tooltipDirection="top"
+                tooltipAlignment="start"
+              >
+                <template slot="tooltip">
+                  <div>
+                    {{ $t("shares.enable_recycle_tooltip") }}
+                  </div>
+                </template>
+                <template slot="text-left">{{
+                  $t("common.disabled")
+                }}</template>
+                <template slot="text-right">{{
+                  $t("common.enabled")
+                }}</template>
+              </NsToggle>
+              <div class="mg-left-md">
+                <template v-if="enable_recycle">
+                  <label class="bx--label">
+                    {{ $t("shares.retention") }}
+                  </label>
+                  <cv-radio-group vertical>
+                    <cv-radio-button
+                      v-model="recycle_retention_radio"
+                      value="limited"
+                      :label="$t('shares.limited')"
+                      ref="recycle_retention_radio_limited"
+                      :disabled="loading.addShare"
+                      checked
+                    ></cv-radio-button>
+                    <cv-radio-button
+                      v-model="recycle_retention_radio"
+                      value="unlimited"
+                      :label="$t('shares.unlimited')"
+                      :disabled="loading.addShare"
+                      ref="recycle_retention_radio_unlimited"
+                    ></cv-radio-button>
+                  </cv-radio-group>
+                  <NsTextInput
+                    v-if="recycle_retention_radio === 'limited'"
+                    v-model.trim="recycle_retention"
+                    :label="$t('shares.recycle_retention')"
+                    :invalid-message="error.recycle_retention"
+                    :disabled="loading.addShare"
+                    ref="recycle_retention"
+                    :placeholder="$t('shares.recycle_retention_placeholder')"
+                    :helper-text="$t('shares.recycle_retention_helper_text')"
+                    type="number"
+                    min="1"
+                    step="1"
+                    max="9999"
+                  />
+                  <label class="bx--label">
+                    {{ $t("shares.recycle_versions_title") }}
+                  </label>
+                  <cv-radio-group vertical>
+                    <cv-radio-button
+                      v-model="recycle_versions"
+                      value="last"
+                      :label="$t('shares.keep_last_versions')"
+                      ref="recycle_versions_last"
+                      :disabled="loading.addShare"
+                      checked
+                    ></cv-radio-button>
+                    <cv-radio-button
+                      v-model="recycle_versions"
+                      value="multiple"
+                      :label="$t('shares.keep_multiple_versions')"
+                      :disabled="loading.addShare"
+                      ref="recycle_retention_multiple"
+                    ></cv-radio-button>
+                  </cv-radio-group>
+                </template>
+              </div>
+            </template>
+          </cv-accordion-item>
+        </cv-accordion>
       </cv-form>
     </template>
     <template slot="secondary-button">{{ core.$t("common.cancel") }}</template>
@@ -106,6 +258,13 @@ export default {
       groups: [],
       DEFAULT_GROUP: "Domain Admins",
       permissions: "ergrw",
+      enable_recycle: false,
+      recycle_retention: "30",
+      recycle_retention_radio: "limited",
+      browseable: false,
+      enable_audit: false,
+      log_failed_events: false,
+      recycle_versions: "last",
       loading: {
         addShare: false,
         listDomainGroups: false,
@@ -117,6 +276,11 @@ export default {
         description: "",
         group: "",
         permissions: "",
+        enable_recycle: "",
+        recycle_retention: "",
+        browseable: "",
+        enable_audit: "",
+        log_failed_events: "",
       },
     };
   },
@@ -142,7 +306,13 @@ export default {
         this.description = "";
         this.group = "";
         this.permissions = "ergrw";
-
+        this.enable_recycle = false;
+        this.recycle_retention = "30";
+        this.recycle_retention_radio = "limited";
+        this.browseable = false;
+        this.enable_audit = false;
+        this.log_failed_events = false;
+        this.recycle_versions = "last";
         if (this.configuration) {
           this.listDomainGroups();
         }
@@ -201,6 +371,33 @@ export default {
         }
       }
 
+      // enable_recycle
+      if (this.enable_recycle && this.recycle_retention_radio === "limited") {
+        if (
+          this.recycle_retention === "" ||
+          isNaN(Number(this.recycle_retention))
+        ) {
+          this.error.recycle_retention = this.$t("error.must_be_a_number");
+          this.focusElement("recycle_retention");
+          isValidationOk = false;
+        } else if (!Number.isInteger(Number(this.recycle_retention))) {
+          this.error.recycle_retention = this.$t("error.must_be_an_integer");
+          this.focusElement("recycle_retention");
+          isValidationOk = false;
+        } else if (Number(this.recycle_retention) < 1) {
+          this.error.recycle_retention = this.$t(
+            "error.must_be_greater_than_zero"
+          );
+          this.focusElement("recycle_retention");
+          isValidationOk = false;
+        } else if (Number(this.recycle_retention) > 9999) {
+          this.error.recycle_retention = this.$t(
+            "error.must_be_less_than_10000"
+          );
+          this.focusElement("recycle_retention");
+          isValidationOk = false;
+        }
+      }
       return isValidationOk;
     },
     async addShare() {
@@ -242,6 +439,15 @@ export default {
             description: this.description,
             group: this.group,
             permissions: this.permissions,
+            enable_recycle: this.enable_recycle,
+            recycle_retention:
+              this.recycle_retention_radio == "unlimited"
+                ? 0
+                : Number(this.recycle_retention),
+            browseable: this.browseable,
+            enable_audit: this.enable_audit,
+            log_failed_events: this.log_failed_events,
+            recycle_versions: this.recycle_versions === "multiple",
           },
           extra: {
             title: this.$t("shares.create_shared_folder_name", {

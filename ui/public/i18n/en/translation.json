@@ -9,7 +9,9 @@
         "next": "Next",
         "previous": "Previous",
         "loading": "Loading",
-        "optional": "optional"
+        "optional": "optional",
+        "enabled": "Enabled",
+        "disabled": "Disabled"
     },
     "software_center": {
         "source_package": "App image"
@@ -46,10 +48,10 @@
         "create_shared_folder_name": "Create shared folder {name}",
         "share_already_exists": "A shared folder with this name already exists",
         "group_not_found": "Group not found",
-        "edit_description": "Edit description",
+        "edit": "Edit",
         "set_permissions": "Set permissions",
         "show_acls": "Show ACLs",
-        "edit_shared_folder_description": "Edit shared folder description",
+        "edit_shared_folder": "Edit shared folder",
         "no_description": "No description",
         "shared_folder_name_acls": "{name} ACLs",
         "acl_ro": "Read only",
@@ -97,7 +99,24 @@
         "username_format_examples": "Username format examples",
         "column_name": "Folder name",
         "column_description": "Description",
-        "search_folder": "Search folder"
+        "search_folder": "Search folder",
+        "enable_recycle_tooltip": "Allow users to recover deleted files on Windows. Deleted items are moved to the 'Recycle Bin' folder and kept until the retention period expires.",
+        "enable_recycle": "Keep deleted files in a recycle bin",
+        "recycle_retention": "Recycle Bin retention (days)",
+        "recycle_retention_placeholder": "Number of days",
+        "recycle_retention_helper_text": "Files will be permanently deleted after the specified number of days.",
+        "recycle_retention_invalid_type": "Invalid type for recycle retention, must be an integer",
+        "retention": "Retention",
+        "limited": "Limited",
+        "unlimited": "Unlimited",
+        "browseable": "Make folder visible when browsing",
+        "browseable_tooltip": "Controls whether the folder appears in network browse lists. If disabled the folder is accessible only via direct network path.",
+        "enable_audit": "Audit logging",
+        "enable_audit_tooltip": "Records file and directory changes, plus permission modifications, for security monitoring and compliance auditing.",
+        "log_failed_events": "Log failed events",
+        "recycle_versions_title": "When files with the same name are deleted",
+        "keep_last_versions": "Keep only the latest version",
+        "keep_multiple_versions": "Keep multiple versions"
     },
     "settings": {
         "title": "Settings",
@@ -182,7 +201,11 @@
         "hostname_pattern": "Only alphanumeric characters and hyphens are allowed",
         "hostname_string_lte": "Must be less than or equal to 15 characters",
         "nbalias_pattern": "Only alphanumeric characters and hyphens are allowed",
-        "nbalias_conflict": "File server alias already in use"
+        "nbalias_conflict": "File server alias already in use",
+        "must_be_greater_than_zero": "Must be greater than zero",
+        "must_be_less_than_10000": "Must be less than 10000",
+        "must_be_a_number": "Must be a number",
+        "must_be_an_integer": "Must be an integer"
     },
     "ns_combo_search_box": {
         "placeholder": "Search",

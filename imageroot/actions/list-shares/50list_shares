@@ -96,6 +96,7 @@ for share_name in filter(None, psharenames.stdout.split("\n")):
     log_failed_events = enable_audit and full_audit_failure != "none"
     # Calculate recycle settings
     enable_recycle = ocfg[share_name].get("recycle:repository", "") != ""
+    recycle_versions = ocfg[share_name].get("recycle:versions", "yes") != "no"
     recycle_retention = recycle_retentions.get(share_name, 0)
 
     list_shares['shares'].append({
@@ -104,8 +105,10 @@ for share_name in filter(None, psharenames.stdout.split("\n")):
         "enable_audit": enable_audit,
         "log_failed_events": log_failed_events,
         "enable_recycle": enable_recycle,
+        "recycle_versions": recycle_versions,
         "recycle_retention": recycle_retention,
         "acls": read_acls(share_name),
+        "browseable": ocfg[share_name].get("browseable", "yes") != "no",
     })
 
 json.dump(list_shares, fp=sys.stdout)

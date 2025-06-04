@@ -110,7 +110,7 @@
                     >
                       <NsMenuItem
                         :icon="Edit20"
-                        :label="$t('shares.edit_description')"
+                        :label="$t('shares.edit')"
                       />
                     </cv-overflow-menu-item>
                     <cv-overflow-menu-item
@@ -151,7 +151,7 @@
       @shareCreated="onShareCreated"
     />
     <!-- edit description modal -->
-    <EditDescriptionModal
+    <EditSharedFolderModal
       :isShown="isShownEditDescriptionModal"
       :share="currentShare"
       @hide="hideEditDescriptionModal"
@@ -222,7 +222,7 @@ import {
   PageTitleService,
 } from "@nethserver/ns8-ui-lib";
 import CreateSharedFolderModal from "@/components/shared-folders/CreateSharedFolderModal.vue";
-import EditDescriptionModal from "@/components/shared-folders/EditDescriptionModal.vue";
+import EditSharedFolderModal from "@/components/shared-folders/EditSharedFolderModal.vue";
 import ShowAclsModal from "@/components/shared-folders/ShowAclsModal.vue";
 import SetPermissionsModal from "@/components/shared-folders/SetPermissionsModal.vue";
 import AccessSharesInfoModal from "@/components/shared-folders/AccessSharesInfoModal.vue";
@@ -233,7 +233,7 @@ export default {
   name: "Settings",
   components: {
     CreateSharedFolderModal,
-    EditDescriptionModal,
+    EditSharedFolderModal,
     ShowAclsModal,
     SetPermissionsModal,
     RestoreFileModal,

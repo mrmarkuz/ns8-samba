@@ -12,6 +12,7 @@
                     "log_failed_events": false,
                     "enable_recycle": false,
                     "recycle_retention": 30,
+                    "recycle_versions": true,
                     "description": "First share",
                     "acls": [
                         {
@@ -38,6 +39,7 @@
                     "log_failed_events": false,
                     "enable_recycle": true,
                     "recycle_retention": 7,
+                    "recycle_versions": false,
                     "description": "Second share",
                     "acls": [
                         {
@@ -90,6 +92,11 @@
                 "enable_recycle": {
                     "type": "boolean",
                     "description": "Enable the Recycle Bin for this network share."
+                },
+                "recycle_versions": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Keeps multiple versions of deleted files with the same name. If false, only the latest version is retained."
                 },
                 "recycle_retention": {
                     "type": "integer",

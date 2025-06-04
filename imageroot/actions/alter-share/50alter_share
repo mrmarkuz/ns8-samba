@@ -35,8 +35,9 @@ if 'enable_audit' in request:
 if 'enable_recycle' in request:
     samba.configure_recycle(
         request['name'],
-        request['enable_recycle'],
-        request.get('recycle_retention', 0))
+        enable_recycle=request['enable_recycle'],
+        recycle_retention=request.get('recycle_retention', 0),
+        recycle_versions=request.get('recycle_versions', True),)
 
 if 'browseable' in request:
     samba.configure_browseable(

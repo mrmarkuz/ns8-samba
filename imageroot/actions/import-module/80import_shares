@@ -69,6 +69,7 @@ for record in jaccounts:
         "browseable": record["props"].get("SmbShareBrowseable", "enabled") == "enabled",
         "enable_audit": record["props"].get("SmbAuditStatus", "disabled") == "enabled",
         "enable_recycle": record["props"].get("SmbRecycleBinStatus", "disabled") == "enabled",
+        "recycle_versions": record["props"].get("SmbRecycleBinVersionsStatus", "enabled") == "enabled",
     }
     subprocess.run(['../actions/alter-share/50alter_share'],
         input=json.dumps(alter_share_input),
