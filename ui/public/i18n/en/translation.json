@@ -93,7 +93,7 @@
         "search_file_or_folder": "Search file or folder",
         "restore_file_info": "The selected file or folder will be restored to '{restoredFolder}'. Ensure there is sufficient space on {node} to avoid restore failure.",
         "restoring_to_share_name": "Restoring to share '{name}'",
-        "how_to_access_shared_folders": "How to access shared folders",
+        "how_to_access_shared_folders": "How to access",
         "how_to_access_shared_folders_description": "Help users connect to shared folders with the correct path and login format.",
         "network_path_examples": "Network path example | Network path examples",
         "username_format_examples": "Username format examples",
