@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2025 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+
+import os
+import json
+import sys
+import subprocess
+import agent
+
+def main():
+    rdb = agent.redis_connect(use_replica=True)
+    module_id = os.environ["MODULE_ID"]
+    shared_folders = list_shares()
+    facts = {
+        "server_role": os.getenv("SERVER_ROLE"),
+        "provision_type": os.getenv("PROVISION_TYPE"),
+        "has_nbalias": bool(os.getenv("NBALIAS")),
+        "has_file_server_flag": bool(rdb.sismember(f"module/{module_id}/flags", "file_server")),
+        "shared_folders_count": len(shared_folders),
+        "description_count": len([True for shx in shared_folders if shx['description']]),
+        "audit_enabled_count": len([True for shx in shared_folders if shx['enable_audit']]),
+        "audit_failed_events_count": len([True for shx in shared_folders if shx['enable_audit'] and shx['log_failed_events']]),
+        "recycle_enabled_count": len([True for shx in shared_folders if shx['enable_recycle']]),
+        "recycle_retention_count": len([True for shx in shared_folders if shx['enable_recycle'] and shx['recycle_retention']]),
+        "recycle_versions_count": len([True for shx in shared_folders if shx['enable_recycle'] and shx['recycle_versions']]),
+        "browseable_count": len([True for shx in shared_folders if shx['browseable']]),
+        "acls_length_max": max(len(shx['acls']) for shx in shared_folders),
+        "acls_length_min": min(len(shx['acls']) for shx in shared_folders),
+    }
+    json.dump(facts, sys.stdout)
+
+def list_shares():
+    with subprocess.Popen(["../actions/list-shares/50list_shares"], stdout=subprocess.PIPE) as proc:
+        try:
+            return json.load(proc.stdout)['shares']
+        except json.JSONDecodeError:
+            return []
+
+if __name__ == "__main__":
+    main()
