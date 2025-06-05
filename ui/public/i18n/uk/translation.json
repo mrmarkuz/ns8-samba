@@ -9,7 +9,9 @@
         "previous": "Previous",
         "close": "Закрити",
         "optional": "optional",
-        "loading": "Loading"
+        "loading": "Loading",
+        "disabled": "Disabled",
+        "enabled": "Enabled"
     },
     "shares": {
         "name": "Ім'я",
@@ -26,7 +28,6 @@
         "description": "опис",
         "acl_full": "Повний доступ",
         "from_node_name_of_different_cluster": "З вузла {name} іншого кластера",
-        "edit_description": "Редагувати опис",
         "set_permissions_for_share_name": "Налаштувати дозволи для спільної папки {name}",
         "invalid_permissions": "Недійсні дозволи",
         "acl_ro": "Тільки для читання",
@@ -34,7 +35,6 @@
         "acl_special": "Особливий",
         "no_shares": "Немає спільної папки",
         "configure_instance": "Налаштувати {instance}",
-        "edit_shared_folder_description": "Редагувати опис спільної папки",
         "set_shared_folder_permissions": "Установіть дозволи для спільної папки",
         "delete_shared_folder_name": "Видалити спільну папку {name}",
         "from_node_name": "З вузла {name}",
@@ -73,7 +73,26 @@
         "how_to_access_shared_folders": "How to access shared folders",
         "acl_short_full": "Full access",
         "acl_short_ro": "RO",
-        "column_name": "Folder name"
+        "column_name": "Folder name",
+        "edit_shared_folder": "Edit shared folder",
+        "recycle_versions_title": "When files with the same name are deleted",
+        "keep_multiple_versions": "Keep multiple versions",
+        "recycle_retention_placeholder": "Number of days",
+        "unlimited": "Unlimited",
+        "recycle_retention": "Recycle Bin retention (days)",
+        "edit": "Edit",
+        "enable_audit": "Audit logging",
+        "browseable": "Make folder visible when browsing",
+        "enable_audit_tooltip": "Records file and directory changes, plus permission modifications, for security monitoring and compliance auditing.",
+        "enable_recycle_tooltip": "Allow users to recover deleted files on Windows. Deleted items are moved to the 'Recycle Bin' folder and kept until the retention period expires.",
+        "browseable_tooltip": "Controls whether the folder appears in network browse lists. If disabled the folder is accessible only via direct network path.",
+        "keep_last_versions": "Keep only the latest version",
+        "retention": "Retention",
+        "recycle_retention_helper_text": "Files will be permanently deleted after the specified number of days.",
+        "enable_recycle": "Keep deleted files in a recycle bin",
+        "log_failed_events": "Log failed events",
+        "limited": "Limited",
+        "recycle_retention_invalid_type": "Invalid type for recycle retention, must be an integer"
     },
     "action": {
         "list-backup-repositories": "List backup repositories",
@@ -118,7 +137,11 @@
         "ipaddress_bind_check_failed": "IP address already in use",
         "ipaddress_avail_check_failed": "IP address not available",
         "nbalias_pattern": "Only alphanumeric characters and hyphens are allowed",
-        "nbalias_conflict": "File server alias already in use"
+        "nbalias_conflict": "File server alias already in use",
+        "must_be_a_number": "Must be a number",
+        "must_be_an_integer": "Must be an integer",
+        "must_be_greater_than_zero": "Must be greater than zero",
+        "must_be_less_than_10000": "Must be less than 10000"
     },
     "status": {
         "shared_folders": "Спільні папки",

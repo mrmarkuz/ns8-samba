@@ -21,7 +21,11 @@
         "ipaddress_bind_check_failed": "IP address already in use",
         "ipaddress_avail_check_failed": "IP address not available",
         "nbalias_pattern": "Only alphanumeric characters and hyphens are allowed",
-        "nbalias_conflict": "File server alias already in use"
+        "nbalias_conflict": "File server alias already in use",
+        "must_be_a_number": "Must be a number",
+        "must_be_an_integer": "Must be an integer",
+        "must_be_greater_than_zero": "Must be greater than zero",
+        "must_be_less_than_10000": "Must be less than 10000"
     },
     "common": {
         "required": "Required",
@@ -33,7 +37,9 @@
         "next": "Next",
         "previous": "Previous",
         "optional": "optional",
-        "loading": "Loading"
+        "loading": "Loading",
+        "disabled": "Disabled",
+        "enabled": "Enabled"
     },
     "status": {
         "created": "Created",
@@ -85,7 +91,6 @@
     },
     "shares": {
         "configure_instance": "Configure {instance}",
-        "edit_shared_folder_description": "Edit shared folder description",
         "delete_shared_folder_name": "Delete shared folder {name}",
         "name": "Name",
         "share_already_exists": "A shared folder with this name already exists",
@@ -108,7 +113,6 @@
         "initial_permissions": "Initial permissions",
         "description": "Description",
         "acl_full": "Full access",
-        "edit_description": "Edit description",
         "acl_ro": "Read only",
         "acl_special": "Special",
         "no_shares": "No shared folder",
@@ -145,7 +149,26 @@
         "how_to_access_shared_folders": "How to access shared folders",
         "acl_short_full": "Full access",
         "acl_short_ro": "RO",
-        "column_name": "Folder name"
+        "column_name": "Folder name",
+        "edit_shared_folder": "Edit shared folder",
+        "recycle_retention_placeholder": "Number of days",
+        "unlimited": "Unlimited",
+        "recycle_versions_title": "When files with the same name are deleted",
+        "recycle_retention": "Recycle Bin retention (days)",
+        "edit": "Edit",
+        "enable_audit": "Audit logging",
+        "browseable": "Make folder visible when browsing",
+        "enable_audit_tooltip": "Records file and directory changes, plus permission modifications, for security monitoring and compliance auditing.",
+        "enable_recycle_tooltip": "Allow users to recover deleted files on Windows. Deleted items are moved to the 'Recycle Bin' folder and kept until the retention period expires.",
+        "browseable_tooltip": "Controls whether the folder appears in network browse lists. If disabled the folder is accessible only via direct network path.",
+        "keep_multiple_versions": "Keep multiple versions",
+        "keep_last_versions": "Keep only the latest version",
+        "log_failed_events": "Log failed events",
+        "retention": "Retention",
+        "recycle_retention_helper_text": "Files will be permanently deleted after the specified number of days.",
+        "enable_recycle": "Keep deleted files in a recycle bin",
+        "limited": "Limited",
+        "recycle_retention_invalid_type": "Invalid type for recycle retention, must be an integer"
     },
     "ns_combo_search_box": {
         "results_limit_reached": "Keep typing to show more options",

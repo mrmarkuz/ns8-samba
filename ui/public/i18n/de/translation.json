@@ -9,7 +9,9 @@
         "next": "Nächste",
         "previous": "Vorherige",
         "optional": "optional",
-        "loading": "Loading"
+        "loading": "Loading",
+        "disabled": "Disabled",
+        "enabled": "Enabled"
     },
     "error": {
         "403": "Vorgang nicht autorisiert",
@@ -33,7 +35,11 @@
         "ipaddress_bind_check_failed": "IP address already in use",
         "ipaddress_avail_check_failed": "IP address not available",
         "nbalias_pattern": "Only alphanumeric characters and hyphens are allowed",
-        "nbalias_conflict": "File server alias already in use"
+        "nbalias_conflict": "File server alias already in use",
+        "must_be_a_number": "Must be a number",
+        "must_be_an_integer": "Must be an integer",
+        "must_be_greater_than_zero": "Must be greater than zero",
+        "must_be_less_than_10000": "Must be less than 10000"
     },
     "status": {
         "created": "Erstellt",
@@ -91,7 +97,6 @@
         "title": "Freigegebene Ordner",
         "create_shared_folder_name": "Erstelle freigegebenen Ordner {name}",
         "group_not_found": "Gruppe nicht gefunden",
-        "edit_description": "bearbeite Beschreibung",
         "set_permissions": "setze Rechte",
         "no_description": "keine Beschreibung",
         "acl_ro": "nur Lesen",
@@ -113,7 +118,6 @@
         "permissions": "Rechte",
         "set_permissions_for_share_name": "setze Rechte für freigegebenen Ordner {name}",
         "invalid_permissions": "ungültige Rechte",
-        "edit_shared_folder_description": "Beschreibung der Ordnerfreigabe ändern",
         "main_group_tooltip": "<strong>Domäen-Admin</strong> Gruppe hat immer Vollzugriff auf die Ordnerfreigabe",
         "initial_permissions": "initiale Berechtigungen",
         "set_shared_folder_permissions_explanation": "Es werden neue Berechtigungen für <strong> alle Dateien und Unterverzeichnisse</strong> der Ordnerfreigabe <strong>{name}</strong> gesetzt . Dies kann je nach Größe des Ordners einige Zeit in Anspruch nehmen",
@@ -145,7 +149,26 @@
         "how_to_access_shared_folders": "How to access shared folders",
         "acl_short_full": "Full access",
         "acl_short_ro": "RO",
-        "column_name": "Folder name"
+        "column_name": "Folder name",
+        "enable_recycle_tooltip": "Allow users to recover deleted files on Windows. Deleted items are moved to the 'Recycle Bin' folder and kept until the retention period expires.",
+        "recycle_retention_placeholder": "Number of days",
+        "recycle_versions_title": "When files with the same name are deleted",
+        "unlimited": "Unlimited",
+        "recycle_retention": "Recycle Bin retention (days)",
+        "edit_shared_folder": "Edit shared folder",
+        "edit": "Edit",
+        "enable_audit": "Audit logging",
+        "browseable": "Make folder visible when browsing",
+        "enable_audit_tooltip": "Records file and directory changes, plus permission modifications, for security monitoring and compliance auditing.",
+        "browseable_tooltip": "Controls whether the folder appears in network browse lists. If disabled the folder is accessible only via direct network path.",
+        "keep_multiple_versions": "Keep multiple versions",
+        "keep_last_versions": "Keep only the latest version",
+        "retention": "Retention",
+        "recycle_retention_helper_text": "Files will be permanently deleted after the specified number of days.",
+        "enable_recycle": "Keep deleted files in a recycle bin",
+        "log_failed_events": "Log failed events",
+        "limited": "Limited",
+        "recycle_retention_invalid_type": "Invalid type for recycle retention, must be an integer"
     },
     "ns_combo_search_box": {
         "placeholder": "Search",

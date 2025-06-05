@@ -9,7 +9,9 @@
         "next": "Next",
         "previous": "Previous",
         "optional": "optional",
-        "loading": "Loading"
+        "loading": "Loading",
+        "disabled": "Disabled",
+        "enabled": "Enabled"
     },
     "status": {
         "title": "Estado",
@@ -42,10 +44,8 @@
         "create_shared_folder_name": "Crear carpeta compartida {name}",
         "share_already_exists": "Ya existe una carpeta compartida con el mismo nombre",
         "group_not_found": "Grupo no encontrado",
-        "edit_description": "Editar descripción",
         "set_permissions": "Establecer permisos",
         "show_acls": "Ver ACLs",
-        "edit_shared_folder_description": "Editar descripción de carpeta compartida",
         "no_description": "Sin descripción",
         "shared_folder_name_acls": "ACLs {name}",
         "acl_ro": "Solo lectura",
@@ -94,7 +94,26 @@
         "how_to_access_shared_folders": "How to access shared folders",
         "acl_short_full": "Full access",
         "acl_short_ro": "RO",
-        "column_name": "Folder name"
+        "column_name": "Folder name",
+        "recycle_retention_placeholder": "Number of days",
+        "recycle_retention": "Recycle Bin retention (days)",
+        "retention": "Retention",
+        "keep_multiple_versions": "Keep multiple versions",
+        "recycle_versions_title": "When files with the same name are deleted",
+        "unlimited": "Unlimited",
+        "edit_shared_folder": "Edit shared folder",
+        "edit": "Edit",
+        "enable_audit": "Audit logging",
+        "browseable": "Make folder visible when browsing",
+        "enable_audit_tooltip": "Records file and directory changes, plus permission modifications, for security monitoring and compliance auditing.",
+        "enable_recycle_tooltip": "Allow users to recover deleted files on Windows. Deleted items are moved to the 'Recycle Bin' folder and kept until the retention period expires.",
+        "browseable_tooltip": "Controls whether the folder appears in network browse lists. If disabled the folder is accessible only via direct network path.",
+        "keep_last_versions": "Keep only the latest version",
+        "recycle_retention_helper_text": "Files will be permanently deleted after the specified number of days.",
+        "enable_recycle": "Keep deleted files in a recycle bin",
+        "log_failed_events": "Log failed events",
+        "limited": "Limited",
+        "recycle_retention_invalid_type": "Invalid type for recycle retention, must be an integer"
     },
     "about": {
         "title": "Acerca de"
@@ -145,7 +164,11 @@
         "ipaddress_bind_check_failed": "IP address already in use",
         "ipaddress_avail_check_failed": "IP address not available",
         "nbalias_pattern": "Only alphanumeric characters and hyphens are allowed",
-        "nbalias_conflict": "File server alias already in use"
+        "nbalias_conflict": "File server alias already in use",
+        "must_be_a_number": "Must be a number",
+        "must_be_an_integer": "Must be an integer",
+        "must_be_greater_than_zero": "Must be greater than zero",
+        "must_be_less_than_10000": "Must be less than 10000"
     },
     "ns_combo_search_box": {
         "clear_search": "Clear search",
