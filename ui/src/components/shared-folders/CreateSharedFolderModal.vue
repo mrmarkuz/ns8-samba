@@ -309,7 +309,7 @@ export default {
         this.enable_recycle = false;
         this.recycle_retention = "30";
         this.recycle_retention_radio = "limited";
-        this.browseable = false;
+        this.browseable = true;
         this.enable_audit = false;
         this.log_failed_events = false;
         this.recycle_versions = "last";
