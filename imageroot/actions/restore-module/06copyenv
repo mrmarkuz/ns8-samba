@@ -27,6 +27,7 @@ def main():
         if has_ad_user_domain(original_environment, check_also_external_domains=True):
             agent.set_env("REALM", original_environment["REALM"])
             agent.set_env("DOMAIN", original_environment.get("DOMAIN", original_environment["REALM"].lower()))
+            agent.set_env("DNS1ADDRESS", original_environment["DNS1ADDRESS"])
     elif server_role == 'dc':
         assign_ipaddress_for_dc(original_environment, has_valid_ip)
         agent.set_env("REALM", original_environment["REALM"])
