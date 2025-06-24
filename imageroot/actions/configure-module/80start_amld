@@ -45,6 +45,7 @@ response = agent.tasks.run(
         'path': '/users-admin/' + domain,
         'http2https': True,
         'strip_prefix': True,
+        'slash_redirect': True,
     },
 )
 
