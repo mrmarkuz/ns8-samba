@@ -6,12 +6,12 @@
         "cancel": "Cancel",
         "next": "Next",
         "previous": "Previous",
-        "save": "Save",
+        "save": "சேமி",
         "close": "Close",
         "optional": "optional",
         "loading": "Loading",
-        "disabled": "Disabled",
-        "enabled": "Enabled"
+        "disabled": "முடக்கப்பட்டது",
+        "enabled": "இயக்கப்பட்டது"
     },
     "action": {
         "list-backup-repositories": "List backup repositories",

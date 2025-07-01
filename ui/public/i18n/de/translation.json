@@ -45,7 +45,7 @@
         "created": "Erstellt",
         "size": "Größe",
         "name": "Name",
-        "no_images": "Keine Abbilder",
+        "no_images": "keine Abbilder",
         "app_volumes": "App Volumen | App Volumen",
         "services": "Dienst | Dienste",
         "app_images": "App Abbild | App Abbilder",
@@ -194,7 +194,7 @@
         "ad_admin_username": "AD admin username",
         "file_server_name_tooltip": "Unique name for the Active Directory computer account. It will appear in DNS and cannot be changed.",
         "domain": "Domain",
-        "title": "Settings",
+        "title": "Einstellungen",
         "credentials_required_description": "Saving changes requires the credentials of a user in the 'Domain Admins' group."
     },
     "welcome": {
