@@ -69,6 +69,7 @@ cat - >/etc/samba/smb.conf <<EOF
         recycle:repository =
         recycle:keeptree = yes
         recycle:versions = yes
+        recycle:directory_mode = 0770
 
 EOF
 
