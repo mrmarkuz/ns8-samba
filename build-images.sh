@@ -88,7 +88,7 @@ buildah add "${container}" ui/dist /ui
 buildah config \
     --label="org.nethserver.max-per-node=1" \
     --label="org.nethserver.min-core=3.9.0-0" \
-    --label "org.nethserver.images=ghcr.io/nethserver/samba-dc:${IMAGETAG:-latest} docker.io/timescale/timescaledb:2.19.3-pg17" \
+    --label "org.nethserver.images=ghcr.io/nethserver/samba-dc:${IMAGETAG:-latest} docker.io/timescale/timescaledb:2.20.3-pg17" \
     --label 'org.nethserver.authorizations=node:fwadm cluster:accountprovider traefik@node:routeadm' \
     --label="org.nethserver.tcp-ports-demand=1" \
     --entrypoint=/ "${container}"
