@@ -45,10 +45,10 @@ ExecStart=/usr/bin/podman run \
     ${SAMBA_DC_IMAGE}
 
 # DC startup: wait until some TCP ports are ready (DNS, Kerberos, LDAP, Global catalog)
-ExecStartPost=/usr/bin/bash -c "[ $$SERVER_ROLE == member ] || while ! exec 3<>/dev/tcp/${IPADDRESS}/53; do sleep 5 ; done"
-ExecStartPost=/usr/bin/bash -c "[ $$SERVER_ROLE == member ] || while ! exec 3<>/dev/tcp/${IPADDRESS}/88; do sleep 5 ; done"
-ExecStartPost=/usr/bin/bash -c "[ $$SERVER_ROLE == member ] || while ! exec 3<>/dev/tcp/${IPADDRESS}/389; do sleep 5 ; done"
-ExecStartPost=/usr/bin/bash -c "[ $$SERVER_ROLE == member ] || while ! exec 3<>/dev/tcp/${IPADDRESS}/3268; do sleep 5 ; done"
+ExecStartPost=/usr/bin/bash -c "[[ $$SERVER_ROLE == member ]] || while ! exec 3<>/dev/tcp/${IPADDRESS}/53; do sleep 5 ; done"
+ExecStartPost=/usr/bin/bash -c "[[ $$SERVER_ROLE == member ]] || while ! exec 3<>/dev/tcp/${IPADDRESS}/88; do sleep 5 ; done"
+ExecStartPost=/usr/bin/bash -c "[[ $$SERVER_ROLE == member ]] || while ! exec 3<>/dev/tcp/${IPADDRESS}/389; do sleep 5 ; done"
+ExecStartPost=/usr/bin/bash -c "[[ $$SERVER_ROLE == member ]] || while ! exec 3<>/dev/tcp/${IPADDRESS}/3268; do sleep 5 ; done"
 
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%N.cid -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%N.cid
