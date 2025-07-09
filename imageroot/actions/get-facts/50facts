@@ -29,8 +29,8 @@ def main():
         "recycle_retention_count": len([True for shx in shared_folders if shx['enable_recycle'] and shx['recycle_retention']]),
         "recycle_versions_count": len([True for shx in shared_folders if shx['enable_recycle'] and shx['recycle_versions']]),
         "browseable_count": len([True for shx in shared_folders if shx['browseable']]),
-        "acls_length_max": max(len(shx['acls']) for shx in shared_folders),
-        "acls_length_min": min(len(shx['acls']) for shx in shared_folders),
+        "acls_length_max": max(len(shx['acls']) for shx in shared_folders) if shared_folders else 0,
+        "acls_length_min": min(len(shx['acls']) for shx in shared_folders) if shared_folders else 0,
     }
     json.dump(facts, sys.stdout)
 
