@@ -233,6 +233,7 @@ def configure_recycle(sharename, enable_recycle=True, recycle_retention=0, recyc
         else:
             agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "setparm", sharename, "recycle:versions", "no")
         agent.run_helper("podman", "exec", "samba-dc", "recycle", "set_retention", sharename, str(recycle_retention))
+        agent.run_helper("podman", "exec", "samba-dc", "recycle", "init_repository", sharename)
     else:
         agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "delparm", sharename, "recycle:repository")
         agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "delparm", sharename, "recycle:versions")

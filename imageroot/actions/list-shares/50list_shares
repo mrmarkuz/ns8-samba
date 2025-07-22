@@ -70,7 +70,7 @@ list_shares = {
     "shares": []
 }
 
-ocfg = configparser.ConfigParser(delimiters=("="))
+ocfg = configparser.ConfigParser(delimiters=("="), interpolation=None)
 with subprocess.Popen(podman_exec + ["net", "conf", "list"], stdout=subprocess.PIPE, text=True) as hconf:
     try:
         ocfg.read_file(hconf.stdout, 'samba-registry-conf')

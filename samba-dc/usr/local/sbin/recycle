@@ -10,6 +10,7 @@ import json
 import sys
 import time
 import os
+import shutil
 from pathlib import Path
 import argparse
 import configparser
@@ -72,6 +73,26 @@ def get_recycle_repository(share_name):
         repodir = '' # recycle is disabled
     return repodir
 
+def init_recycle_directory(share_name):
+    repository = get_recycle_repository(share_name)
+    if not repository:
+        return # recycle bin is disabled
+    share_path = RECYCLE_BASE / share_name
+    recycle_path = share_path / repository
+    if recycle_path.exists():
+        return
+    print(f"Creating recycle repository: {recycle_path}", file=sys.stderr)
+    cur = share_path
+    share_meta = share_path.stat()
+    # Create the recycle bin repository and its parent path components
+    # like mkdir -p, copying on them the share root permissions and
+    # extended attributes:
+    for part in recycle_path.relative_to(share_path).parts:
+        cur = cur / part
+        cur.mkdir(exist_ok=True)
+        os.chown(cur, share_meta.st_uid, share_meta.st_gid)
+        shutil.copystat(share_path, cur)
+
 def run_daemon():
     while True:
         time.sleep(6400)
@@ -101,6 +122,8 @@ def main():
     set_parser.add_argument("num_days", type=int, help="Retention in days (0 means keep forever)")
     del_parser = subparsers.add_parser("del_retention", help="Delete retention for a share")
     del_parser.add_argument("share_name", help="Share name")
+    init_parser = subparsers.add_parser("init_repository", help="Initialize the repository directory for a share")
+    init_parser.add_argument("share_name", help="Share name")
     subparsers.add_parser("run_daemon", help="Run the daily cleanup loop continuosly")
     subparsers.add_parser("purge_shares", help="Run cleanup procedure immediately")
     args = parser.parse_args()
@@ -110,6 +133,8 @@ def main():
         set_retention(args.share_name, args.num_days)
     elif args.command == "del_retention":
         del_retention(args.share_name)
+    elif args.command == "init_repository":
+        init_recycle_directory(args.share_name)
     elif args.command == "run_daemon":
         run_daemon()
     elif args.command == "purge_shares":
