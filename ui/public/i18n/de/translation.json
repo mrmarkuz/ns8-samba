@@ -9,9 +9,9 @@
         "next": "Nächste",
         "previous": "Vorherige",
         "optional": "optional",
-        "loading": "Loading",
-        "disabled": "Disabled",
-        "enabled": "Enabled"
+        "loading": "Lade",
+        "disabled": "Deaktiviert",
+        "enabled": "Aktiviert"
     },
     "error": {
         "403": "Vorgang nicht autorisiert",
@@ -60,7 +60,7 @@
         "go_to_domains_and_users": "Zu Domänen und Benutzer wechseln",
         "shared_folders": "Freigegebene Ordner",
         "go_to_shared_folders": "Gehe zu freigegebene Ordner",
-        "go_to_settings": "Go to Settings"
+        "go_to_settings": "Gehen Sie zu den Einstellungen"
     },
     "about": {
         "title": "Über"
@@ -110,7 +110,7 @@
         "main_group": "Hauptgruppe",
         "no_shares": "keine freigegebenen Ordner",
         "share_already_exists": "Ein freigegebener Ordner mit diesem Namen existiert bereits",
-        "delete_shared_folder_description": "Lösche freigegeben Ordner <strong>{name}</strong>? Alle enthaltenen Dateien werden <strong>permanent</strong> gelöscht.",
+        "delete_shared_folder_description": "Freigegeben Ordner <strong>{name}</strong> löschen? Alle enthaltenen Dateien werden <strong>permanent</strong> gelöscht.",
         "ergrw_description": "Hauptgruppe kann lesen und schrieben, jeder andere kann nur lesen",
         "grw_description": "Hauptgruppe kan lesen und schrieben, jeder andere kann weder lesen noch schreiben",
         "erw_description": "Jeder kann lesen und schreiben",
@@ -118,7 +118,7 @@
         "permissions": "Rechte",
         "set_permissions_for_share_name": "setze Rechte für freigegebenen Ordner {name}",
         "invalid_permissions": "ungültige Rechte",
-        "main_group_tooltip": "<strong>Domäen-Admin</strong> Gruppe hat immer Vollzugriff auf die Ordnerfreigabe",
+        "main_group_tooltip": "'Domain Admins' Gruppe hat immer volle Kontrolle auf freigegebenen Ordner",
         "initial_permissions": "initiale Berechtigungen",
         "set_shared_folder_permissions_explanation": "Es werden neue Berechtigungen für <strong> alle Dateien und Unterverzeichnisse</strong> der Ordnerfreigabe <strong>{name}</strong> gesetzt . Dies kann je nach Größe des Ordners einige Zeit in Anspruch nehmen",
         "restoring_to_share_name": "Restoring to share '{name}'",
@@ -141,13 +141,13 @@
         "no_backup_found": "No backup found",
         "column_description": "Description",
         "network_path_examples": "Network path example | Network path examples",
-        "acl_short_special": "Special",
+        "acl_short_special": "Besonders",
         "how_to_access_shared_folders_description": "Help users connect to shared folders with the correct path and login format.",
         "username_format_examples": "Username format examples",
         "search_folder": "Search folder",
         "acl_short_rw": "RW",
         "how_to_access_shared_folders": "How to access shared folders",
-        "acl_short_full": "Full access",
+        "acl_short_full": "Vollzugang",
         "acl_short_ro": "RO",
         "column_name": "Folder name",
         "enable_recycle_tooltip": "Allow users to recover deleted files on Windows. Deleted items are moved to the 'Recycle Bin' folder and kept until the retention period expires.",
@@ -155,8 +155,8 @@
         "recycle_versions_title": "When files with the same name are deleted",
         "unlimited": "Unlimited",
         "recycle_retention": "Recycle Bin retention (days)",
-        "edit_shared_folder": "Edit shared folder",
-        "edit": "Edit",
+        "edit_shared_folder": "Bearbeite geteilte Ordner",
+        "edit": "Bearbeiten",
         "enable_audit": "Audit logging",
         "browseable": "Make folder visible when browsing",
         "enable_audit_tooltip": "Records file and directory changes, plus permission modifications, for security monitoring and compliance auditing.",
