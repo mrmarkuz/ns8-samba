@@ -256,22 +256,27 @@ container scans for files and directories whose filesystem change time
 exceeds the configured retention period and removes them. If a retention
 value of `0` is set, the automatic cleanup procedure is disabled.
 
-When the recycle bin is enabled, the Samba share parameter
-`recycle:repository = .recycle` is set in the share registry
-configuration. The repository directory is created by the add-share and
-alter-share actions if it does not exist, to properly set its permissions.
+When the recycle bin is enabled on a share, its the Samba parameter
+`recycle:repository = .recycle/%U` is set in the share registry
+configuration.
 
 Review the current share configuration with:
 
     podman exec samba-dc net conf list
 
-The default base path for the recycle bin is `.recycle`. It can be changed
-with the following command:
+The default base path for the recycle bin is `.recycle`. It is created by
+the add-share and alter-share actions if it does not exist, to properly
+set its permissions. It can be changed with the following command:
 
-    python3 -magent -c 'agent.set_env("RECYCLE_REPOSITORY", ".myrecycle")'
+       python3 -magent -c 'agent.set_env("RECYCLE_REPOSITORY", ".myrecycle")'
 
 The path is relative to the share root directory. This change does not
 affect shares that have already been configured.
+
+The full recycle bin path is private for each user. For this reason, the
+`/%U` suffix is always automatically appended when generating the
+corresponding Samba configuration parameter.
+
 
 ## Known log messages
 

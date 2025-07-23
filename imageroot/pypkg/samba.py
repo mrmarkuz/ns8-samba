@@ -227,7 +227,7 @@ def configure_samba_audit(sharename, enable_audit=True, log_failed_events=False)
 
 def configure_recycle(sharename, enable_recycle=True, recycle_retention=0, recycle_versions=False):
     if enable_recycle:
-        agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "setparm", sharename, "recycle:repository", os.getenv("RECYCLE_REPOSITORY", ".recycle"))
+        agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "setparm", sharename, "recycle:repository", os.getenv("RECYCLE_REPOSITORY", ".recycle") + "/%U")
         if recycle_versions:
             agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "delparm", sharename, "recycle:versions")
         else:

@@ -71,7 +71,7 @@ def get_recycle_repository(share_name):
             stderr=subprocess.DEVNULL).strip()
     except subprocess.CalledProcessError as e:
         repodir = '' # recycle is disabled
-    return repodir
+    return repodir.removesuffix("/%U")
 
 def init_recycle_directory(share_name):
     repository = get_recycle_repository(share_name)
