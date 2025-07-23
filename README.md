@@ -256,16 +256,27 @@ container scans for files and directories whose filesystem change time
 exceeds the configured retention period and removes them. If a retention
 value of `0` is set, the automatic cleanup procedure is disabled.
 
-When the recycle bin is enabled, the Samba share parameter
-`recycle:repository = .recycle` is set in the share registry
-configuration. Review the current share configuration with:
+When the recycle bin is enabled on a share, its the Samba parameter
+`recycle:repository = .recycle/%U` is set in the share registry
+configuration.
+
+Review the current share configuration with:
 
     podman exec samba-dc net conf list
 
-The default repository value `.recycle` assigned to enable the recycle bin
-can be adjusted by executing a command like this:
+The default base path for the recycle bin is `.recycle`. It is created by
+the add-share and alter-share actions if it does not exist, to properly
+set its permissions. It can be changed with the following command:
 
-    python3 -magent -c 'agent.set_env("RECYCLE_REPOSITORY", ".myrecycle")'
+       python3 -magent -c 'agent.set_env("RECYCLE_REPOSITORY", ".myrecycle")'
+
+The path is relative to the share root directory. This change does not
+affect shares that have already been configured.
+
+The full recycle bin path is private for each user. For this reason, the
+`/%U` suffix is always automatically appended when generating the
+corresponding Samba configuration parameter.
+
 
 ## Known log messages
 
@@ -292,3 +303,24 @@ Migration is implemented in the `import-module` action.
 - `user.SAMBA_PAI` attribute is not copied to NS8 shares. It contains
   the ACL *protected/don't inherit* flag. See [map acl
   inherit](https://www.samba.org/samba/docs/current/man-html/smb.conf.5.html).
+
+## Testing
+
+Test the module using the `test-module.sh` script:
+
+    ./test-module.sh <NODE_ADDR> ghcr.io/nethserver/samba:bug-7537
+
+Additional arguments are forwarded to the `robot` command (see [Robot
+Framework](https://robotframework.org/)).
+
+For instance, to speed up testing on a local machine:
+
+1. Skip the instance removal
+
+       ./test-module.sh 10.5.4.1 ghcr.io/nethserver/samba:bug-7537 --exclude remove
+
+2. Continue to use the Samba instance, skipping the installation steps.
+   The `--variable` option is required to find the existing Samba
+   instance.
+
+       ./test-module.sh 10.5.4.1 ghcr.io/nethserver/samba:bug-7537 --exclude createORremove --variable MID1:samba1
