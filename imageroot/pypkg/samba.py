@@ -244,3 +244,33 @@ def configure_browseable(sharename, browseable=True):
         agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "delparm", sharename, "browseable")
     else:
         agent.run_helper("podman", "exec", "samba-dc", "net", "conf", "setparm", sharename, "browseable", "no")
+
+def get_user_account_control(user):
+    sambatool_cmd = ['podman', 'exec', '-i', 'samba-dc', 'samba-tool']
+    getdn_cmd = sambatool_cmd + ['user', 'show', user, '--attributes=userAccountControl']
+    proc = subprocess.run(getdn_cmd, check=True, capture_output=True, text=True)
+    output = proc.stdout.strip()
+    # Extract the DN and userAccountControl value
+    dn_str = None
+    user_account_control = None
+    for line in output.splitlines():
+        if line.startswith("dn:"):
+            dn_str = line
+        elif line.startswith("userAccountControl:"):
+            user_account_control = int(line.split(":", 1)[1].strip())
+    if not dn_str or user_account_control is None:
+        raise Exception("DN or userAccountControl not found")
+    return dn_str, user_account_control
+
+def set_user_account_control(dn_str, user_account_control, no_password_expiration):
+    UF_DONT_EXPIRE_PASSWORD = 0x10000
+    if no_password_expiration == True and not ( user_account_control & UF_DONT_EXPIRE_PASSWORD ):
+        user_account_control |= UF_DONT_EXPIRE_PASSWORD # set the flag
+    elif no_password_expiration == False and ( user_account_control & ~UF_DONT_EXPIRE_PASSWORD ):
+        user_account_control &= ~UF_DONT_EXPIRE_PASSWORD # clear the flag
+    else:
+        user_account_control = None  # No change needed
+    if user_account_control is not None:
+        ldbmodify_cmd = ['podman', 'exec', '-i', 'samba-dc', 'ldbmodify', '-H', '/var/lib/samba/private/sam.ldb']
+        ldbmodify_input = f'{dn_str}\nchangetype: modify\nreplace: userAccountControl\nuserAccountControl: {user_account_control}\n'
+        subprocess.run(ldbmodify_cmd, input=ldbmodify_input, stdout=sys.stderr, check=True, text=True)

@@ -31,7 +31,7 @@ agent.write_envfile("api-moduled.env", {
     "AMLD_JWT_REALM": domain,
     "AMLD_JWT_SECRET": amld_secret,
     "AMLD_BIND_ADDRESS": ":" + amld_port,
-    "AMLD_EXPORT_ENV": "NODE_ID REALM REDIS_ADDRESS"
+    "AMLD_EXPORT_ENV": "NODE_ID REALM REDIS_ADDRESS PYTHONPATH"
 })
 
 # Configure Traefik to route "/user-admin/<domain>" path requests to

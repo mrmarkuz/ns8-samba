@@ -10,6 +10,7 @@ import json
 import sys
 import subprocess
 import os
+import samba
 
 request = json.load(sys.stdin)
 user = request['user']
@@ -20,8 +21,14 @@ if 'password' in request:
     password = request['password']
     inputdata = password + "\n" + password + "\n"
     setpassword_cmd = sambatool_cmd + ['user', 'setpassword', user]
+    if request['must_change_password']:
+        setpassword_cmd += ['--must-change-at-next-login']
     subprocess.run(setpassword_cmd, input=inputdata,
                    stdout=sys.stderr, check=True, text=True)
+
+if 'no_password_expiration' in request:
+    dn_str, user_account_control = samba.get_user_account_control(user)
+    samba.set_user_account_control(dn_str, user_account_control, request['no_password_expiration'])
 
 if 'locked' in request:
     if request['locked'] == True:

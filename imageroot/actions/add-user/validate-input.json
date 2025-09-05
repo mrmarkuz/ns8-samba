@@ -13,7 +13,9 @@
             "groups": [
                 "developers"
             ],
-            "mail": "alice@nethserver.org"
+            "mail": "alice@nethserver.org",
+            "must_change_password": true,
+            "no_password_expiration": true
         }
     ],
     "required": [
@@ -66,6 +68,16 @@
                     "maxLength": 0
                 }
             ]
+        },
+        "must_change_password": {
+            "title": "Must change password",
+            "type": "boolean",
+            "description": "If true, the user must change their password at next login"
+        },
+        "no_password_expiration": {
+            "title": "No password expiration",
+            "type": "boolean",
+            "description": "If true, the user's password will not expire"
         }
     },
     "$defs": {}

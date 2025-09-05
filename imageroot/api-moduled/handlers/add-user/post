@@ -10,6 +10,7 @@ import sys
 import agent
 import json
 import subprocess
+import samba
 
 request = json.load(sys.stdin)
 user = request['user']
@@ -30,9 +31,14 @@ password = request.get('password', '')
 display_name = request.get('display_name', '')
 locked = request.get('locked', False)
 mail = request.get('mail', '')
+must_change_password = request.get('must_change_password', False) # If 'must_change_password' is True, the user must change their password at next login
+no_password_expiration = request.get('no_password_expiration', False) # If 'no_password_expiration' is True, the user's password will not expire
 
 sambatool_cmd = ['podman', 'exec', '-i', 'samba-dc', 'samba-tool']
 adduser_cmd = sambatool_cmd + ['user', 'create', user]
+
+if must_change_password:
+    adduser_cmd += ['--must-change-at-next-login']
 
 if not password:
     adduser_cmd += ['--random-password']
@@ -65,5 +71,9 @@ if mail:
     ldbedit_cmd = ['podman', 'exec', '-i', 'samba-dc', 'ldbmodify', '-i', '-H', '/var/lib/samba/private/sam.ldb']
     ldbedit_input = f'{dn}\nchangetype: modify\nreplace: mail\nmail: {mail}\n'
     subprocess.run(ldbedit_cmd, input=ldbedit_input, stdout=sys.stderr, check=True, text=True)
+
+if no_password_expiration:
+    dn_str, user_account_control = samba.get_user_account_control(user)
+    samba.set_user_account_control(dn_str, user_account_control, no_password_expiration)
 
 json.dump({"status": "success", "message": "user_created"}, fp=sys.stdout)
