@@ -78,6 +78,6 @@ if 'mail' in request:
     else:
         ldbedit_cmd = ['podman', 'exec', '-i', 'samba-dc', 'ldbmodify', '-H', '/var/lib/samba/private/sam.ldb']
         ldbedit_input = f'{dn}\nchangetype: modify\ndelete: mail\n'
-    subprocess.run(ldbedit_cmd, input=ldbedit_input, stdout=sys.stderr, check=True, text=True)
+    subprocess.run(ldbedit_cmd, input=ldbedit_input, stdout=sys.stderr, check=False, text=True)
 
 json.dump({"status": "success", "message": "user_altered"}, fp=sys.stdout)
