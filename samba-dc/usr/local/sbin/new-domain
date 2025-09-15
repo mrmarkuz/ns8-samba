@@ -35,6 +35,6 @@ samba-tool user setexpiry --noexpiry "${adminuser}"
 samba-tool user create "${SVCUSER}" <<<"${SVCPASS}"$'\n'"${SVCPASS}"
 samba-tool user setexpiry --noexpiry "${SVCUSER}"
 
-# Default password expiration policy is disabled #7503
+# Default password expiration policy is enabled #7503
 # set the minimum password age to 0 days #7400
-samba-tool domain passwordsettings set --min-pwd-age=0 --max-pwd-age=0
+samba-tool domain passwordsettings set --min-pwd-age=0 --max-pwd-age=180
