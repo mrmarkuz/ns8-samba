@@ -110,5 +110,6 @@ cat - >>/etc/samba/smb.conf <<EOF
 comment = %u home directory
 browseable = no
 writeable = yes
+include = /etc/samba/include_homes.conf
 
 EOF
