@@ -106,7 +106,7 @@ ROLEDC
 fi
 
 # Exit when the homes section already exists in include.conf
-grep -q '^[homes]' /etc/samba/include.conf || exit 0
+grep -q '^\[homes\]' /etc/samba/include.conf && exit 0
 
 cat - >>/etc/samba/smb.conf <<EOF
 [homes]
