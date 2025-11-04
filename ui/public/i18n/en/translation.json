@@ -139,6 +139,7 @@
     },
     "welcome": {
         "title": "Welcome to Samba",
+        "realm_dc_avail_check_failed": "Active Directory domain discovery failed",
         "step_domain_description": "Select the Active Directory domain you want to join as a member.",
         "no_domain_configured": "No Active Directory domain configured",
         "no_domain_configured_description": "Please configure an Active Directory domain first",

@@ -196,6 +196,7 @@
     },
     "welcome": {
         "title": "Welcome su Samba",
+        "realm_dc_avail_check_failed": "Rilevamento del dominio Active Directory non riuscito",
         "create_file_server": "Creazione del file server",
         "go_to_domains_and_users": "Vai a Domini e utenti",
         "no_domain_configured_description": "Si prega di configurare prima un dominio Active Directory",

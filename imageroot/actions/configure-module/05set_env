@@ -30,6 +30,8 @@ import cluster.userdomains
 import ipaddress
 import socket
 import samba
+import subprocess
+import re
 from agent.ldapproxy import Ldapproxy
 from agent.ldapclient import Ldapclient
 
@@ -39,6 +41,53 @@ realm = request['realm'].upper()
 hostname = request['hostname'].lower()
 provision_type = request['provision']
 server_role = 'dc'
+
+def discover_realm_and_nbdomain(kdomain, dcaddr):
+    global request
+    domparams = Ldapproxy().get_domain(kdomain)
+    ldapconn = Ldapclient.factory(**domparams).ldapconn
+    # Do not trust the realm input parameter value (alias kdomain)
+    # because it can be aribitrarily set in external domains. To
+    # safely set REALM, retrieve the AD DNS domain name straight from
+    # AD LDAP.
+    results = ldapconn.search(
+        search_base='',
+        search_filter='(objectClass=*)',
+        search_scope='BASE',
+        attributes=['*'],
+    )
+    realm = results[2][0]['attributes']['defaultNamingContext'][0].upper().removeprefix("DC=").replace(",DC=", ".")
+    # Look up NBDOMAIN in AD LDAP with the first domain provider:
+    results = ldapconn.search(
+        search_base=f'CN=Partitions,CN=Configuration,{domparams["base_dn"]}',
+        search_filter=f'(&(objectClass=crossRef)(nCName={domparams["base_dn"]}))',
+        attributes=['nETBIOSName'],
+    )
+    if results[2]:
+        nbdomain = results[2][0]['attributes']['nETBIOSName']
+    else:
+        # If LDAP points to AD GC the query can return an empty set. Fall
+        # back to a RPC query on TCP port 445.
+        podman_run_cmd = f'''
+            podman run --network=host
+                --env=SERVER_ROLE=member
+                --env=REALM={realm}
+                --env=IPADDRESS=127.0.0.1
+                --env=NBDOMAIN=WORKGROUP
+                --rm --name rpcclient
+                --replace
+                {os.environ["SAMBA_DC_IMAGE"]}
+                rpcclient -I {dcaddr} -c lsaquery
+        '''.split()
+        credentials = request["adminuser"] + f"@{realm}%" + request["adminpass"]
+        podman_run_cmd += ["-U", credentials, dcaddr]
+        rpcclient_output = subprocess.check_output(podman_run_cmd, text=True, stderr=sys.stderr)
+        match = re.search(r'^Domain Name:\s*(\S+)', rpcclient_output, re.MULTILINE)
+        if match:
+            nbdomain = match.group(1)
+        else:
+            raise Exception("Unexpected rpcclient output")
+    return realm, nbdomain
 
 with agent.redis_connect() as rdb:
     cluster_network = ipaddress.ip_network(rdb.get('cluster/network'))
@@ -69,31 +118,12 @@ with agent.redis_connect() as rdb:
         try:
             addrinfo = socket.getaddrinfo(peer_address, 53)
             dns1address = addrinfo[0][4][0]
+            realm, nbdomain = discover_realm_and_nbdomain(kdomain, dns1address)
         except Exception as ex:
             print(agent.SD_ERR, "Address resolution error:", ex, file=sys.stderr)
             json.dump([{"field": "realm", "parameter": "realm", "value": realm, "error": "realm_dc_avail_check_failed"}], fp=sys.stdout)
             agent.set_status('validation-failed')
             sys.exit(6)
-        # Look up NBDOMAIN in AD LDAP with the first domain provider:
-        domparams = Ldapproxy().get_domain(kdomain)
-        ldapconn = Ldapclient.factory(**domparams).ldapconn
-        results = ldapconn.search(
-            search_base=f'CN=Partitions,CN=Configuration,{domparams["base_dn"]}',
-            search_filter=f'(&(objectClass=crossRef)(nCName={domparams["base_dn"]}))',
-            attributes=['nETBIOSName'],
-        )
-        nbdomain = results[2][0]['attributes']['nETBIOSName']
-        # Do not trust the realm input parameter value (alias kdomain)
-        # because it can be aribitrarily set in external domains. To
-        # safely set REALM, retrieve the AD DNS domain name straight from
-        # AD LDAP.
-        results = ldapconn.search(
-            search_base='',
-            search_filter='(objectClass=*)',
-            search_scope='BASE',
-            attributes=['*'],
-        )
-        realm = results[2][0]['attributes']['defaultNamingContext'][0].upper().removeprefix("DC=").replace(",DC=", ".")
         samba.validate_hostname(request['hostname'], realm.lower(), nameservers=[dns1address])
         agent.set_env('DNS1ADDRESS', dns1address)
     else:
