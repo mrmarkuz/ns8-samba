@@ -4,61 +4,11 @@ set -e
 images=()
 
 repobase="${REPOBASE:-ghcr.io/nethserver}"
-reponame="ubuntu-samba"
 user_manager_version=v1.2.4
 
-container="ubuntu-working-container"
-# Prepare a local Ubuntu-based samba image
-if ! buildah inspect --type container "${container}" &>/dev/null; then
-    container=$(buildah from --name "${container}" docker.io/library/ubuntu:24.04)
-    buildah run "${container}" -- bash <<'EOF'
-set -e
-apt-get update
-apt-get -y install samba winbind krb5-user iputils-ping bzip2 ldb-tools chrony dnsutils acl smbclient libnss-winbind rsync plocate wsdd \
-    syslog-ng-core syslog-ng-mod-sql libdbd-pgsql
-apt-get clean
-find /var/lib/apt/lists/ -type f -delete
-EOF
-    buildah commit "${container}" "${repobase}/${reponame}"
-fi
-
-#
-# Add our entrypoint script to build samba-dc
-#
-container=$(buildah from "${repobase}/${reponame}")
-reponame="samba-dc"
-buildah run "${container}" -- mv -v /etc/samba/smb.conf /etc/samba/smb.conf.distro
-buildah add "${container}" samba-dc/ /
-buildah config \
-    --env=SAMBA_LOGLEVEL="1 auth_audit:3" \
-    --env=SAMBA_SHARES_DIR=/srv/shares \
-    --env=SAMBA_HOMES_DIR=/srv/homes \
-    "${container}"
-buildah run "${container}" -- bash <<'EOF'
-mkdir -m 0755 -p "${SAMBA_SHARES_DIR:?}" "${SAMBA_HOMES_DIR:?}"
-chown -c root:root "${SAMBA_SHARES_DIR}" "${SAMBA_HOMES_DIR}"
-# Verify our assumptions on the uid/gid numeric value of some well-known entries
-[[ "$(id -u nobody)" == 65534 ]] || : ${nobody_uid_error:?Unexpected nobody uid value}
-[[ "$(id -g nobody)" == 65534 ]] || : ${nobody_gid_error:?Unexpected nobody gid value}
-[[ "$(getent group users | cut -d: -f3)" == 100 ]] || : ${users_gid_error:?Unexpected users gid value}
-echo "OS" $(grep -E '^(NAME|VERSION)=' /etc/os-release)
-echo "Samba" $(samba -V)
-# Initialize an empty directory as homedir skeleton.
-mkdir -vp /var/lib/samba/skel.d
-# Ubuntu HOME_MODE default value is too wide for this application.
-sed -r -i '/^HOME_MODE/ s/\b0750\b/0700/' /etc/login.defs
-EOF
-buildah config --cmd='' \
-    --entrypoint='["/entrypoint.sh"]' \
-    --env=SERVER_ROLE=dc \
-    --env=DNS1ADDRESS=127.0.0.1 \
-    --volume=/srv/shares \
-    --volume=/srv/homes \
-    --volume=/var/lib/samba \
-    --volume=/etc/samba \
-    "${container}"
-buildah commit "${container}" "${repobase}/${reponame}"
-images+=("${repobase}/${reponame}")
+podman build --target ubuntu-samba-base -t ${repobase}/ubuntu-samba:latest .
+podman build --squash -t ${repobase}/samba-dc .
+images+=("${repobase}/samba-dc")
 
 #
 # Imageroot samba
@@ -88,7 +38,7 @@ buildah add "${container}" ui/dist /ui
 buildah config \
     --label="org.nethserver.max-per-node=1" \
     --label="org.nethserver.min-core=3.9.0-0" \
-    --label "org.nethserver.images=ghcr.io/nethserver/samba-dc:${IMAGETAG:-latest} docker.io/timescale/timescaledb:2.23.0-pg17" \
+    --label "org.nethserver.images=${repobase}/samba-dc:${IMAGETAG:-latest} docker.io/timescale/timescaledb:2.23.0-pg17" \
     --label 'org.nethserver.authorizations=node:fwadm cluster:accountprovider traefik@node:routeadm' \
     --label="org.nethserver.tcp-ports-demand=1" \
     --entrypoint=/ "${container}"
