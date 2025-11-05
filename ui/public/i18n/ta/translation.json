@@ -210,6 +210,7 @@
         "file_server_alias_tooltip": "Alternative name for the computer, used in network paths to access shared folders. It must be unique in the AD network and can be changed later. Can be up to 15 characters long.",
         "file_server_ip_address_tooltip": "IP address to associate with the file server in the Active Directory domain. This cannot be changed later if Samba is also a domain provider and other domain providers exist in the same domain.",
         "file_server_name_tooltip": "Unique name for the Active Directory computer account, can be up to 15 characters long. It will appear in DNS and cannot be changed later.",
-        "step_domain_description": "Select the Active Directory domain you want to join as a member."
+        "step_domain_description": "Select the Active Directory domain you want to join as a member.",
+        "realm_dc_avail_check_failed": "Active Directory domain discovery failed"
     }
 }

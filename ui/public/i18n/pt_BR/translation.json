@@ -207,7 +207,8 @@
         "step_credentials_description": "Enter the credentials of a user in the 'Domain Admins' group.",
         "file_server_alias_tooltip": "Alternative name for the computer, used in network paths to access shared folders. It must be unique in the AD network and can be changed later. Can be up to 15 characters long.",
         "step_domain_description": "Select the Active Directory domain you want to join as a member.",
-        "file_server_name_tooltip": "Unique name for the Active Directory computer account, can be up to 15 characters long. It will appear in DNS and cannot be changed later."
+        "file_server_name_tooltip": "Unique name for the Active Directory computer account, can be up to 15 characters long. It will appear in DNS and cannot be changed later.",
+        "realm_dc_avail_check_failed": "Active Directory domain discovery failed"
     },
     "software_center": {
         "source_package": "App image"
