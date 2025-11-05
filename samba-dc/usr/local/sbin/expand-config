@@ -84,14 +84,12 @@ cat - >>/etc/samba/smb.conf <<ROLEMEMBER
         #       Check /proc/self/uid_map and uid of nobody for range
         #       upper bound
         server role = member server
-        include = /etc/samba/include.conf
 
 ROLEMEMBER
 else
 cat - >>/etc/samba/smb.conf <<ROLEDC
         vfs objects = dfs_samba4 acl_xattr recycle full_audit
         server role = active directory domain controller
-        include = /etc/samba/include.conf
 
 [sysvol]
         path = /var/lib/samba/sysvol
@@ -107,8 +105,10 @@ fi
 
 cat - >>/etc/samba/smb.conf <<EOF
 [homes]
-comment = %u home directory
-browseable = no
-writeable = yes
+        comment = %u home directory
+        browseable = no
+        writeable = yes
 
+[global]
+        include = /etc/samba/include.conf
 EOF
