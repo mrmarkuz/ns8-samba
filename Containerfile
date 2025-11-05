@@ -3,6 +3,7 @@ FROM docker.io/library/ubuntu:24.04 AS ubuntu-samba-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# renovate-ubuntu: suite=noble
 RUN set -e \
     && apt-get update \
     && apt-get install -y --no-install-recommends \

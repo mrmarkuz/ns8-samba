@@ -3,7 +3,7 @@
   "extends": [
     "local>NethServer/.github:ns8"
   ],
-  "regexManagers": [
+  "customManagers": [
     {
       "fileMatch": [
         "build-images.sh"
