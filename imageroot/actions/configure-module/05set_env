@@ -65,26 +65,29 @@ def discover_realm_and_nbdomain(kdomain, dcaddr):
     )
     if results[2]:
         nbdomain = results[2][0]['attributes']['nETBIOSName']
+        print(f"NetBIOS domain name found via LDAP: {nbdomain}", file=sys.stderr)
     else:
         # If LDAP points to AD GC the query can return an empty set. Fall
         # back to a RPC query on TCP port 445.
         podman_run_cmd = f'''
-            podman run --network=host
+            podman run
+                --interactive
+                --network=host
                 --env=SERVER_ROLE=member
                 --env=REALM={realm}
                 --env=IPADDRESS=127.0.0.1
-                --env=NBDOMAIN=WORKGROUP
+                --env=NBDOMAIN=ignored
                 --rm --name rpcclient
                 --replace
                 {os.environ["SAMBA_DC_IMAGE"]}
                 rpcclient -I {dcaddr} -c lsaquery
         '''.split()
-        credentials = request["adminuser"] + f"@{realm}%" + request["adminpass"]
-        podman_run_cmd += ["-U", credentials, dcaddr]
-        rpcclient_output = subprocess.check_output(podman_run_cmd, text=True, stderr=sys.stderr)
-        match = re.search(r'^Domain Name:\s*(\S+)', rpcclient_output, re.MULTILINE)
+        podman_run_cmd += ["-U", domparams["bind_dn"], dcaddr]
+        rpcclient_proc = subprocess.run(podman_run_cmd, input=domparams["bind_password"] + "\n", text=True, stderr=sys.stderr, stdout=subprocess.PIPE, check=True)
+        match = re.search(r'^Domain Name:\s*(\S+)', rpcclient_proc.stdout, re.MULTILINE)
         if match:
             nbdomain = match.group(1)
+            print(f"NetBIOS domain name found via RPC: {nbdomain}", file=sys.stderr)
         else:
             raise Exception("Unexpected rpcclient output")
     return realm, nbdomain
