@@ -111,4 +111,5 @@ cat - >>/etc/samba/smb.conf <<EOF
 
 [global]
         include = /etc/samba/include.conf
+
 EOF
