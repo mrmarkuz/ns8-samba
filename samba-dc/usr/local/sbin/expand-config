@@ -109,7 +109,7 @@ cat - >>/etc/samba/smb.conf <<EOF
         browseable = no
         writeable = yes
 
-[global]
+
         include = /etc/samba/include.conf
 
 EOF
